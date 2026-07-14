@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+
 export function Badge({ label, variant = 'info' }: { label: string; variant?: 'info' | 'success' | 'warning' | 'danger' }) {
   const bg = {
     info: 'bg-blue-500/20 border-blue-500/30',
