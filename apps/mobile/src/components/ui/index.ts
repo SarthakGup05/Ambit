@@ -1,2 +1,1 @@
-// Export UI components here
-export {};
+export * from '@repo/ui/components';
