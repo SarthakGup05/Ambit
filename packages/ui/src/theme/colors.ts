@@ -3,13 +3,13 @@ export const colors = {
 
   surface: "#FFFFFF",
 
-  primary: "#2B2E4A",
+  primary: "#C3E2C4", // Tea Green
 
   success: "#7A9B76",
 
   danger: "#C1584B",
 
-  text: "#1C1B1F",
+  text: "#000000", // Black in light mode
 
-  secondary: "#6B6873",
+  secondary: "#FFFFFF", // Secondary White
 };

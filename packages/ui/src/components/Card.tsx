@@ -9,9 +9,9 @@ export interface CardProps extends ViewProps {
 }
 
 const cardStyles = {
-  container: 'bg-zinc-900 border border-zinc-800 rounded-xl p-4',
-  title: 'text-white text-lg font-bold',
-  description: 'text-zinc-400 text-sm mt-1',
+  container: 'bg-white border border-zinc-200 rounded-xl p-4',
+  title: 'text-black text-lg font-bold',
+  description: 'text-zinc-500 text-sm mt-1',
 };
 
 export function Card({ title, description, children, className, ...props }: CardProps) {

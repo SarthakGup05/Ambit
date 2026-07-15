@@ -7,6 +7,31 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 
+function AmbitAIcon({ size = 24, color = '#000000' }: { size?: number; color?: string }) {
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <Path
+        d="M 5 19 L 12 4 L 19 19"
+        stroke={color}
+        strokeWidth={2.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M 8.5 13 C 10.5 11.5, 13.5 11.5, 15.5 13"
+        stroke={color}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -94,8 +119,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
     const route = state.routes[routeIndex];
     const isFocused = state.index === routeIndex;
-    const color = isFocused ? "#4F46E5" : "#9CA3AF";
-    const fill = isFocused ? "#4F46E5" : "transparent";
+    const color = isFocused ? "#000000" : "#9CA3AF";
+    const fill = isFocused ? "#000000" : "transparent";
 
     const onPress = () => {
       triggerHaptic();
@@ -168,10 +193,10 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           height: tabHeight,
           borderRadius: r,
           backgroundColor: 'transparent',
-          shadowColor: '#6B6AC0',
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.18,
-          shadowRadius: 20,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.08,
+          shadowRadius: 15,
           zIndex: -1,
         }}
       />
@@ -206,11 +231,11 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           borderRadius: 32,
           backgroundColor: 'white',
           padding: 4,
-          shadowColor: '#3B4FD8',
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.35,
-          shadowRadius: 18,
-          elevation: 12,
+          shadowColor: '#2E7D32',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+          elevation: 8,
         }}
       >
         <View
@@ -223,7 +248,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           }}
         >
           <LinearGradient
-            colors={['#7BA7F5', '#4169D8', '#2040B0']}
+            colors={['#D0F0C0', '#C3E2C4']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFillObject}
@@ -240,8 +265,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
               backgroundColor: 'rgba(255,255,255,0.22)',
             }}
           />
-          <View style={{ transform: [{ rotate: '45deg' }] }}>
-            <Navigation size={22} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2.5} />
+          <View style={{ transform: [{ rotate: '0deg' }] }}>
+            <AmbitAIcon size={24} color="#000000" />
           </View>
         </View>
       </Pressable>

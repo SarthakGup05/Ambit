@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Pressable, ScrollView, StyleSheet, TextInput, FlatList, Dimensions, Alert } from 'react-native';
+import { View, Pressable, ScrollView, StyleSheet, TextInput, FlatList, Dimensions, Alert, Platform } from 'react-native';
 import { Screen, Text } from '@repo/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search, X, Megaphone, ShieldCheck, Calendar, AlertTriangle, ArrowRight, CheckCheck } from 'lucide-react-native';
 import { NOTICES } from '../data';
 import { Notice } from '../types';
-import Animated, { FadeInDown, FadeInUp, Layout, ZoomIn, LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInUp, Layout, ZoomIn, LinearTransition } from 'react-native-reanimated';
 import { MegaphoneIcon } from '../../../components/icons/MegaphoneIcon';
 import { BellIcon } from '../../../components/icons/BellIcon';
 import Svg, { Path, Circle, Defs, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
@@ -29,13 +30,13 @@ function HeaderBackgroundSVG() {
     >
       <Defs>
         <RadialGradient id="headerGlow" cx="70%" cy="30%" r="65%">
-          <Stop offset="0%" stopColor="#A78BFA" stopOpacity={0.28} />
-          <Stop offset="50%" stopColor="#818CF8" stopOpacity={0.14} />
-          <Stop offset="100%" stopColor="#E0E7FF" stopOpacity={0} />
+          <Stop offset="0%" stopColor="#C3E2C4" stopOpacity={0.28} />
+          <Stop offset="50%" stopColor="#A8D1AA" stopOpacity={0.14} />
+          <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
         </RadialGradient>
         <SvgLinearGradient id="headerWaves" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#4F46E5" stopOpacity={0.12} />
-          <Stop offset="100%" stopColor="#EC4899" stopOpacity={0.03} />
+          <Stop offset="0%" stopColor="#2E7D32" stopOpacity={0.12} />
+          <Stop offset="100%" stopColor="#C3E2C4" stopOpacity={0.03} />
         </SvgLinearGradient>
       </Defs>
 
@@ -68,31 +69,31 @@ function EmptyStateSVG() {
     >
       <Defs>
         <RadialGradient id="emptyGlow" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor="#A78BFA" stopOpacity={0.25} />
-          <Stop offset="60%" stopColor="#818CF8" stopOpacity={0.08} />
+          <Stop offset="0%" stopColor="#C3E2C4" stopOpacity={0.25} />
+          <Stop offset="60%" stopColor="#A8D1AA" stopOpacity={0.08} />
           <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
         </RadialGradient>
         <SvgLinearGradient id="searchGlass" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.6} />
-          <Stop offset="100%" stopColor="#3B82F6" stopOpacity={0.2} />
+          <Stop offset="0%" stopColor="#C3E2C4" stopOpacity={0.6} />
+          <Stop offset="100%" stopColor="#A8D1AA" stopOpacity={0.2} />
         </SvgLinearGradient>
       </Defs>
 
       <Circle cx={60} cy={60} r={40} fill="url(#emptyGlow)" />
 
-      <Circle cx={60} cy={60} r={32} fill="none" stroke="rgba(139, 92, 246, 0.15)" strokeWidth={1} strokeDasharray="3 3" />
-      <Circle cx={60} cy={60} r={24} fill="none" stroke="rgba(139, 92, 246, 0.25)" strokeWidth={1.5} />
+      <Circle cx={60} cy={60} r={32} fill="none" stroke="rgba(46, 125, 80, 0.15)" strokeWidth={1} strokeDasharray="3 3" />
+      <Circle cx={60} cy={60} r={24} fill="none" stroke="rgba(46, 125, 80, 0.25)" strokeWidth={1.5} />
 
       <Path
         d="M 52 52 A 12 12 0 1 1 52 76 A 12 12 0 1 1 52 52"
         fill="url(#searchGlass)"
-        stroke="#4F46E5"
+        stroke="#2E7D32"
         strokeWidth={2}
       />
       <Path
         d="M 68 68 L 84 84"
         fill="none"
-        stroke="#4F46E5"
+        stroke="#2E7D32"
         strokeWidth={3}
         strokeLinecap="round"
       />
@@ -132,6 +133,7 @@ export function getNoticeIcon(name: string) {
 
 export function NoticesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -167,13 +169,13 @@ export function NoticesScreen() {
     setActiveFilter('All');
   };
 
-  const renderNoticeItem = ({ item }: { item: Notice }) => {
+  const renderNoticeItem = ({ item, index }: { item: Notice; index: number }) => {
     const IconComponent = getNoticeIcon(item.iconName);
     
     return (
       <Animated.View 
-        entering={FadeInUp.springify().damping(15).mass(0.8)}
-        layout={LinearTransition.springify().damping(18)}
+        entering={FadeIn.duration(350).delay(index * 65)}
+        layout={LinearTransition.duration(250)}
         style={styles.card}
       >
         <View style={styles.cardHeader}>
@@ -242,39 +244,47 @@ export function NoticesScreen() {
 
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
+          {/* ── Premium Header ── */}
+          <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
             <HeaderBackgroundSVG />
-            <View style={styles.headerLeftBlock}>
+            {/* Top Brand row */}
+            <View style={styles.headerTop}>
+              <Animated.View entering={ZoomIn.duration(400).delay(50)}>
+                <Text style={styles.brandText}>Ambit</Text>
+              </Animated.View>
+
+              {/* Header Right Action (Bell notification / Mark all read) */}
               <Animated.View 
-                entering={FadeInUp.duration(400).delay(100)} 
+                entering={ZoomIn.duration(400).delay(250)} 
+                style={styles.bellOuter}
+              >
+                <Pressable onPress={handleMarkAllRead}>
+                  <View style={styles.bellInner}>
+                    <CheckCheck size={20} color="#2E7D32" strokeWidth={2.2} />
+                  </View>
+                </Pressable>
+              </Animated.View>
+            </View>
+
+            {/* Title & Subtitle block */}
+            <View style={styles.greetingSection}>
+              <Animated.View 
+                entering={FadeIn.duration(350).delay(150)} 
                 style={styles.titleContainer}
               >
                 <View style={styles.iconBackdrop}>
-                  <MegaphoneIcon size={32} color="gold" />
+                  <MegaphoneIcon size={24} color="gold" />
                 </View>
                 <Text style={styles.titleTextHeader}>
                   Notice Board
                 </Text>
               </Animated.View>
-              <Animated.View entering={FadeInUp.duration(400).delay(200)}>
+              <Animated.View entering={FadeIn.duration(350).delay(250)}>
                 <Text style={styles.subtitleTextHeader}>
                   Stay updated with official society bulletins and alerts.
                 </Text>
               </Animated.View>
             </View>
-
-            {/* Header Right Action (Bell notification / Mark all read) */}
-            <Animated.View 
-              entering={ZoomIn.duration(400).delay(250)} 
-              style={styles.bellOuter}
-            >
-              <Pressable onPress={handleMarkAllRead}>
-                <View style={styles.bellInner}>
-                  <CheckCheck size={20} color="#4F46E5" strokeWidth={2.2} />
-                </View>
-              </Pressable>
-            </Animated.View>
           </View>
 
           {/* Premium Search Bar */}
@@ -340,7 +350,7 @@ export function NoticesScreen() {
             showsVerticalScrollIndicator={false}
              ListEmptyComponent={
               <Animated.View 
-                entering={ZoomIn.springify().damping(15)}
+                entering={FadeIn.duration(350)}
                 style={styles.emptyCard}
               >
                 <EmptyStateSVG />
@@ -356,7 +366,7 @@ export function NoticesScreen() {
                   ]}
                 >
                   <LinearGradient
-                    colors={['#7C3AED', '#4F46E5']}
+                    colors={['#C3E2C4', '#A8D1AA']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.resetBtnGradient}
@@ -379,28 +389,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    position: 'relative',
+    alignItems: 'center',
+    marginBottom: 16,
+    width: '100%',
   },
-  headerLeftBlock: {
-    flex: 1,
-    marginRight: 16,
+  brandText: {
+    fontFamily: Platform.select({
+      ios: 'Snell Roundhand',
+      android: 'cursive',
+      default: 'serif',
+    }),
+    fontSize: 34,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  greetingSection: {
+    marginTop: 2,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   titleTextHeader: {
-    fontSize: 34,
+    fontSize: 26,
     color: '#11111E',
     fontFamily: 'ManropeBold',
-    letterSpacing: -1,
-    lineHeight: 40,
+    letterSpacing: -0.6,
+    lineHeight: 32,
     marginLeft: 12,
   },
   subtitleTextHeader: {
@@ -419,7 +441,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.65)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8B5CF6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -434,12 +456,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8B5CF6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
-    marginTop: 4,
   },
   bellInner: {
     width: 40,
@@ -467,7 +488,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.65)',
     borderRadius: 24,
     paddingHorizontal: 16,
-    shadowColor: '#5B5EA6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
@@ -505,9 +526,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   filterPillActive: {
-    backgroundColor: '#11111E',
+    backgroundColor: '#C3E2C4',
     borderColor: 'transparent',
-    shadowColor: '#11111E',
+    shadowColor: '#C3E2C4',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
@@ -523,7 +544,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   filterTextActive: {
-    color: '#FFFFFF',
+    color: '#000000',
   },
   filterTextInactive: {
     color: '#5E5D6A',
@@ -539,7 +560,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.55)',
     borderRadius: 28,
     padding: 20,
-    shadowColor: '#5B5EA6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.06,
     shadowRadius: 18,
@@ -573,7 +594,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#2E7D32',
   },
   urgentBadge: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -643,7 +664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 30,
-    shadowColor: '#5B5EA6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.05,
     shadowRadius: 18,
@@ -671,7 +692,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#7C3AED',
+    shadowColor: '#A8D1AA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -693,7 +714,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.22)',
   },
   resetBtnText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontFamily: 'ManropeBold',
     fontSize: 12,
     letterSpacing: 0.2,
@@ -705,7 +726,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(195, 226, 196, 0.25)',
   },
   blob2: {
     position: 'absolute',
@@ -714,6 +735,6 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(99, 179, 237, 0.1)',
+    backgroundColor: 'rgba(168, 209, 170, 0.15)',
   },
 });

@@ -1,17 +1,36 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { Text } from '@repo/ui';
-import { Pressable } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { BellIcon } from '../../../components/icons/BellIcon';
 
 export function HomeHeader() {
   return (
     <View style={styles.container}>
-      <View style={styles.textBlock}>
-        {/* Greeting label */}
+      {/* Top Brand & Notification row */}
+      <View style={styles.headerTop}>
+        <Animated.View entering={ZoomIn.duration(400).delay(50)}>
+          <Text style={styles.brandText}>Ambit</Text>
+        </Animated.View>
+
+        {/* Bell Button — dual ring glassmorphic */}
         <Animated.View 
-          entering={ZoomIn.duration(400).delay(50)} 
+          entering={ZoomIn.duration(400).delay(300)} 
+          style={styles.bellOuter}
+        >
+          <Pressable>
+            <View style={styles.bellInner}>
+              <BellIcon size={22} />
+              <View style={styles.notifBadge} />
+            </View>
+          </Pressable>
+        </Animated.View>
+      </View>
+
+      {/* Greeting & Society info */}
+      <View style={styles.greetingSection}>
+        <Animated.View 
+          entering={ZoomIn.duration(400).delay(150)} 
           style={styles.greetingRow}
         >
           <View style={styles.greetingDot} />
@@ -20,53 +39,53 @@ export function HomeHeader() {
 
         {/* Name */}
         <Animated.View 
-          entering={ZoomIn.duration(500).delay(200)}
+          entering={ZoomIn.duration(500).delay(250)}
         >
           <Text style={styles.nameText}>Sarthak 👋</Text>
         </Animated.View>
 
         {/* Society pill */}
         <Animated.View 
-          entering={ZoomIn.duration(400).delay(400)} 
+          entering={ZoomIn.duration(400).delay(350)} 
           style={styles.societyPill}
         >
           <View style={styles.societyDot} />
           <Text style={styles.societyText}>Green Heights Society</Text>
         </Animated.View>
       </View>
-
-      {/* Bell Button — dual ring glassmorphic */}
-      <Animated.View 
-        entering={ZoomIn.duration(400).delay(300)} 
-        style={styles.bellOuter}
-      >
-        <Pressable>
-          <View style={styles.bellInner}>
-            <BellIcon size={22} />
-            <View style={styles.notifBadge} />
-          </View>
-        </Pressable>
-      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
   },
-  textBlock: {
-    flex: 1,
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  brandText: {
+    fontFamily: Platform.select({
+      ios: 'Snell Roundhand',
+      android: 'cursive',
+      default: 'serif',
+    }),
+    fontSize: 34,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  greetingSection: {
+    marginTop: 2,
   },
   greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   greetingDot: {
     width: 5,
@@ -83,12 +102,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   nameText: {
-    fontSize: 34,
+    fontSize: 26,
     color: '#11111E',
     fontFamily: 'ManropeBold',
-    letterSpacing: -1,
-    lineHeight: 40,
-    marginBottom: 6,
+    letterSpacing: -0.6,
+    lineHeight: 32,
+    marginBottom: 8,
   },
   societyPill: {
     flexDirection: 'row',
@@ -123,12 +142,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8B5CF6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
-    marginTop: 4,
   },
   bellInner: {
     width: 40,

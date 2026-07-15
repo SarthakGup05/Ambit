@@ -26,7 +26,7 @@ export function PendingVisitorCard() {
         {/* Avatar circle with gradient */}
         <View style={styles.avatarWrap}>
           <LinearGradient
-            colors={['#C7D2FE', '#818CF8']}
+            colors={['#D0F0C0', '#C3E2C4']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFillObject}
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.6)',
     borderRadius: 28,
     padding: 18,
-    shadowColor: '#5B5EA6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
@@ -119,16 +119,16 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   waitingBadge: {
-    backgroundColor: 'rgba(224,234,255,0.8)',
+    backgroundColor: 'rgba(195, 226, 196, 0.4)',
     borderWidth: 1,
-    borderColor: 'rgba(199,210,254,0.6)',
+    borderColor: 'rgba(168, 209, 170, 0.6)',
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   waitingBadgeText: {
     fontSize: 10,
-    color: '#4F46E5',
+    color: '#2E7D32',
     fontFamily: 'InterBold',
     letterSpacing: 0.2,
   },
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: 20,
-    color: '#fff',
+    color: '#1E351F',
     fontFamily: 'ManropeBold',
     zIndex: 1,
   },
@@ -180,16 +180,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   friendPill: {
-    backgroundColor: 'rgba(224,234,255,0.7)',
+    backgroundColor: 'rgba(195, 226, 196, 0.4)',
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: 'rgba(199,210,254,0.5)',
+    borderColor: 'rgba(168, 209, 170, 0.5)',
   },
   friendPillText: {
     fontSize: 10,
-    color: '#4F46E5',
+    color: '#2E7D32',
     fontFamily: 'InterBold',
   },
   unitText: {

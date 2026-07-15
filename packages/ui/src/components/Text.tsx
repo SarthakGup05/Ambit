@@ -44,12 +44,12 @@ export function Text({ children, variant = 'body', weight, className, style, ...
 
   // 4. Base styles without the font-title/font-body classes to avoid conflicts
   const variantStyles = {
-    h1: 'text-3xl text-[#2B2E4A]',
-    h2: 'text-2xl text-[#2B2E4A]',
-    h3: 'text-lg text-[#2B2E4A]',
-    body: 'text-base text-[#6B6873]',
-    caption: 'text-xs text-[#6B6873]',
-    label: 'text-sm text-[#1C1B1F]',
+    h1: 'text-3xl text-[#000000]',
+    h2: 'text-2xl text-[#000000]',
+    h3: 'text-lg text-[#000000]',
+    body: 'text-base text-[#11111E]',
+    caption: 'text-xs text-[#5E5D6A]',
+    label: 'text-sm text-[#000000]',
   }[variant];
 
   // 5. Flatten styles and strip out fontFamily/fontWeight to prevent native OS font fallbacks

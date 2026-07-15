@@ -69,10 +69,10 @@ export function NoticeDetailsScreen() {
   };
 
   const isMegaphone = notice.iconName === 'megaphone';
-  const iconColor = isMegaphone ? '#D4AF37' : (notice.iconColor || '#4F46E5');
+  const iconColor = isMegaphone ? '#D4AF37' : (notice.iconColor || '#2E7D32');
   const iconSize = isMegaphone ? 18 : 14;
-  const badgeBg = isMegaphone ? 'rgba(212, 175, 55, 0.1)' : (notice.tagBg || '#EEF2FF');
-  const badgeTextColor = isMegaphone ? '#B8860B' : (notice.tagText || notice.iconColor || '#4F46E5');
+  const badgeBg = isMegaphone ? 'rgba(212, 175, 55, 0.1)' : (notice.tagBg || '#EAF5EB');
+  const badgeTextColor = isMegaphone ? '#B8860B' : (notice.tagText || notice.iconColor || '#2E7D32');
 
   return (
     <View style={styles.container}>
@@ -157,7 +157,7 @@ export function NoticeDetailsScreen() {
           {/* Loading indicator when auto-acknowledging */}
           {loading && (
             <Animated.View entering={FadeIn} style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#4F46E5" />
+              <ActivityIndicator size="small" color="#2E7D32" />
               <Text style={styles.loadingText}>Acknowledging receipt...</Text>
             </Animated.View>
           )}

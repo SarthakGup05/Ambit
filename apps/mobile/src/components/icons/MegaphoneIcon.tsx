@@ -3,12 +3,12 @@ import Svg, { Path, Defs, LinearGradient, RadialGradient, Stop, Circle } from 'r
 
 export interface MegaphoneIconProps {
   size?: number;
-  color?: 'purple' | 'gold';
+  color?: 'tea' | 'gold' | 'purple';
 }
 
-export function MegaphoneIcon({ size = 24, color = 'purple' }: MegaphoneIconProps) {
+export function MegaphoneIcon({ size = 24, color = 'tea' }: MegaphoneIconProps) {
   const isGold = color === 'gold';
-  const strokeColor = isGold ? '#78350F' : '#1E1B4B'; // Rich dark brown-gold outline instead of navy/black
+  const strokeColor = isGold ? '#78350F' : '#1E351F'; // Dark forest green outline
   
   return (
     <Svg
@@ -18,10 +18,10 @@ export function MegaphoneIcon({ size = 24, color = 'purple' }: MegaphoneIconProp
     >
       <Defs>
         <LinearGradient id="hornBody" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor={isGold ? "#FDE047" : "#C4B5FD"} />
-          <Stop offset="40%" stopColor={isGold ? "#EAB308" : "#8B5CF6"} />
-          <Stop offset="80%" stopColor={isGold ? "#D97706" : "#6D28D9"} />
-          <Stop offset="100%" stopColor={isGold ? "#92400E" : "#4C1D95"} />
+          <Stop offset="0%" stopColor={isGold ? "#FDE047" : "#D0F0C0"} />
+          <Stop offset="40%" stopColor={isGold ? "#EAB308" : "#C3E2C4"} />
+          <Stop offset="80%" stopColor={isGold ? "#D97706" : "#78B27A"} />
+          <Stop offset="100%" stopColor={isGold ? "#92400E" : "#2E7D32"} />
         </LinearGradient>
 
         <LinearGradient id="hornMouth" x1="0%" y1="0%" x2="0%" y2="100%">

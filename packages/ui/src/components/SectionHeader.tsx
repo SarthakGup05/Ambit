@@ -19,7 +19,7 @@ export function SectionHeader({ title, actionText, onActionPress, className }: S
       {actionText && (
         <Pressable onPress={onActionPress}>
           <View style={styles.actionWrapper}>
-            <Text className="text-[11px] font-extrabold text-[#4F46E5] uppercase tracking-wider">
+            <Text className="text-[11px] font-extrabold text-[#2E7D32] uppercase tracking-wider">
               {actionText}
             </Text>
           </View>

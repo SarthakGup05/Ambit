@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { NOTICES } from '../../notices/data';
 import { getNoticeIcon } from '../../notices/components/NoticesScreen';
-import Animated, { FadeInUp, LinearTransition, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const FILTERS = ['All', 'Maintenance', 'Society', 'Events'];
@@ -58,13 +58,13 @@ export function LatestNotice() {
       </ScrollView>
 
       {filteredNotices.length > 0 ? (
-        filteredNotices.map((notice) => {
+        filteredNotices.map((notice, index) => {
           const IconComponent = getNoticeIcon(notice.iconName);
           return (
             <Animated.View 
               key={notice.id} 
-              entering={FadeInUp.springify().damping(15).mass(0.8)}
-              layout={LinearTransition.springify().damping(18)}
+              entering={FadeIn.duration(350).delay(index * 65)}
+              layout={LinearTransition.duration(250)}
               style={styles.card}
             >
               <View style={styles.cardHeader}>
@@ -101,7 +101,7 @@ export function LatestNotice() {
         })
       ) : (
         <Animated.View 
-          entering={ZoomIn.springify().damping(15)}
+          entering={FadeIn.duration(350)}
           style={styles.emptyCard}
         >
           <Text style={styles.emptyText}>No Notices Available</Text>
@@ -114,7 +114,7 @@ export function LatestNotice() {
             ]}
           >
             <LinearGradient
-              colors={['#7C3AED', '#4F46E5']}
+              colors={['#C3E2C4', '#A8D1AA']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.resetBtnGradient}
@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   filterPillActive: {
-    backgroundColor: '#11111E',
+    backgroundColor: '#C3E2C4',
     borderColor: 'transparent',
-    shadowColor: '#11111E',
+    shadowColor: '#C3E2C4',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   filterTextActive: {
-    color: '#FFFFFF',
+    color: '#000000',
   },
   filterTextInactive: {
     color: '#5E5D6A',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.55)',
     borderRadius: 28,
     padding: 20,
-    shadowColor: '#5B5EA6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.07,
     shadowRadius: 18,
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#5B5EA6',
+    shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.05,
     shadowRadius: 16,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: '#7C3AED',
+    shadowColor: '#A8D1AA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   resetBtnText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontFamily: 'ManropeBold',
     fontSize: 11,
     letterSpacing: 0.2,
