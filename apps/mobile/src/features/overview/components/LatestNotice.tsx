@@ -1,63 +1,28 @@
 import React, { useState } from 'react';
 import { View, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Text } from '@repo/ui';
-import { ArrowRight, Megaphone, Calendar, ShieldCheck } from 'lucide-react-native';
-
-const NOTICES = [
-  {
-    id: '1',
-    category: 'Maintenance',
-    title: 'Pool Maintenance',
-    description: 'Swimming pool will remain closed tomorrow from 10 AM to 2 PM for deep cleaning and water filtration check.',
-    tag: 'Announcement',
-    time: 'Tomorrow',
-    tagBg: 'rgba(245, 158, 11, 0.08)',
-    tagBorder: 'rgba(245, 158, 11, 0.25)',
-    tagText: '#B45309',
-    icon: Megaphone,
-    iconColor: '#B45309'
-  },
-  {
-    id: '2',
-    category: 'Society',
-    title: 'Annual General Meeting',
-    description: 'The AGM has been rescheduled to this Sunday at 10 AM in the clubhouse. Attendance is highly requested.',
-    tag: 'Official',
-    time: '4 days ago',
-    tagBg: 'rgba(79, 70, 229, 0.08)',
-    tagBorder: 'rgba(79, 70, 229, 0.25)',
-    tagText: '#4F46E5',
-    icon: ShieldCheck,
-    iconColor: '#4F46E5'
-  },
-  {
-    id: '3',
-    category: 'Events',
-    title: 'Monsoon Festival 2026',
-    description: 'Join us for food trucks, live music, and rain dance in the society lawns this Saturday at 6 PM! Entry is free.',
-    tag: 'Event',
-    time: 'In 2 days',
-    tagBg: 'rgba(124, 58, 237, 0.08)',
-    tagBorder: 'rgba(124, 58, 237, 0.25)',
-    tagText: '#7C3AED',
-    icon: Calendar,
-    iconColor: '#7C3AED'
-  }
-];
+import { ArrowRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { NOTICES } from '../../notices/data';
+import { getNoticeIcon } from '../../notices/components/NoticesScreen';
+import Animated, { FadeInUp, LinearTransition, ZoomIn } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const FILTERS = ['All', 'Maintenance', 'Society', 'Events'];
 
 export function LatestNotice() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState('All');
 
-  // Filter notices
-  const filteredNotices = activeFilter === 'All' 
-    ? NOTICES 
-    : NOTICES.filter(n => n.category === activeFilter);
+  // Filter notices (show only first 3 matching items on Home for brevity)
+  const filteredNotices = (
+    activeFilter === 'All' 
+      ? NOTICES 
+      : NOTICES.filter(n => n.category === activeFilter)
+  ).slice(0, 3);
 
   return (
     <View style={styles.container}>
-      {/* Horizontal Scrollable Filter Bar */}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -92,12 +57,16 @@ export function LatestNotice() {
         })}
       </ScrollView>
 
-      {/* Notice Card List */}
       {filteredNotices.length > 0 ? (
         filteredNotices.map((notice) => {
-          const IconComponent = notice.icon;
+          const IconComponent = getNoticeIcon(notice.iconName);
           return (
-            <View key={notice.id} style={styles.card}>
+            <Animated.View 
+              key={notice.id} 
+              entering={FadeInUp.springify().damping(15).mass(0.8)}
+              layout={LinearTransition.springify().damping(18)}
+              style={styles.card}
+            >
               <View style={styles.cardHeader}>
                 <View 
                   style={[
@@ -121,19 +90,40 @@ export function LatestNotice() {
                 {notice.description}
               </Text>
 
-              <Pressable>
+              <Pressable onPress={() => router.push({ pathname: '/(resident)/notice-details', params: { id: notice.id } })}>
                 <View style={styles.readBtn}>
                   <Text style={styles.readText}>Read Details</Text>
                   <ArrowRight size={13} color="#11111E" strokeWidth={2.4} />
                 </View>
               </Pressable>
-            </View>
+            </Animated.View>
           );
         })
       ) : (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>No announcements in this category</Text>
-        </View>
+        <Animated.View 
+          entering={ZoomIn.springify().damping(15)}
+          style={styles.emptyCard}
+        >
+          <Text style={styles.emptyText}>No Notices Available</Text>
+          <Text style={styles.emptySubtext}>There are currently no updates posted in this category.</Text>
+          <Pressable 
+            onPress={() => setActiveFilter('All')}
+            style={({ pressed }) => [
+              styles.resetBtn,
+              pressed && { opacity: 0.85 }
+            ]}
+          >
+            <LinearGradient
+              colors={['#7C3AED', '#4F46E5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.resetBtnGradient}
+            >
+              <View style={styles.resetBtnGloss} />
+              <Text style={styles.resetBtnText}>Show All Notices</Text>
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
       )}
     </View>
   );
@@ -249,18 +239,67 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     marginHorizontal: 20,
-    marginVertical: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderWidth: 1,
+    marginVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    borderColor: 'rgba(255, 255, 255, 0.55)',
+    borderWidth: 1.5,
     borderRadius: 28,
-    padding: 30,
+    paddingHorizontal: 24,
+    paddingVertical: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#5B5EA6',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 3,
   },
   emptyText: {
-    fontSize: 12,
+    fontSize: 15,
+    color: '#11111E',
+    fontFamily: 'ManropeBold',
+    marginBottom: 6,
+    letterSpacing: -0.2,
+  },
+  emptySubtext: {
+    fontSize: 11,
     color: '#5E5D6A',
-    fontFamily: 'InterBold',
-  }
+    fontFamily: 'InterMedium',
+    textAlign: 'center',
+    lineHeight: 16,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  resetBtn: {
+    width: 150,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  resetBtnGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  resetBtnGloss: {
+    position: 'absolute',
+    top: 2,
+    left: 6,
+    width: '90%',
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  resetBtnText: {
+    color: '#FFFFFF',
+    fontFamily: 'ManropeBold',
+    fontSize: 11,
+    letterSpacing: 0.2,
+  },
 });
