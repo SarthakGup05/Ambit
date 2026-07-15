@@ -1,9 +1,16 @@
-import { View, Text } from "react-native";
+import { Redirect } from "expo-router";
+import React, { useEffect, useState } from "react";
 
 export default function Home() {
-  return (
-    <View className="flex-1 justify-center items-center bg-zinc-950">
-      <Text className="text-blue-300 text-3xl font-bold">Ambit 🚀</Text>
-    </View>
-  );
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return <Redirect href="/(resident)" />;
 }
