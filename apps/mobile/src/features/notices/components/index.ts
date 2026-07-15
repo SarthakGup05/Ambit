@@ -1,2 +1,2 @@
-// Custom UI components for this feature
-export {};
+export * from './NoticesScreen';
+export * from './NoticeDetailsScreen';
