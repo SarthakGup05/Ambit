@@ -12,11 +12,13 @@ interface ScreenProps extends ViewProps {
 const SafeLayout = SafeAreaView as any;
 
 export function Screen({ children, scrollable = true, className, scrollViewProps, ...props }: ScreenProps) {
-  const containerClass = cn("flex-1 bg-[#FAF8F5]", className);
+  const bgClass = className?.split(' ').find(c => c.startsWith('bg-')) || 'bg-[#FAF8F5]';
+  // Keep other classes but remove solid background from ScrollView to let gradient or custom bg show
+  const containerClass = cn("flex-1 bg-transparent", className?.replace(/bg-\[\#[0-9a-fA-F]+\]/g, '').replace(/bg-\w+(-\d+)?/g, ''));
 
   if (scrollable) {
     return (
-      <SafeLayout className="flex-1 bg-[#FAF8F5]" edges={['top', 'left', 'right']}>
+      <SafeLayout className={cn("flex-1", bgClass)} edges={['top', 'left', 'right']}>
         <ScrollView 
           contentContainerStyle={{ flexGrow: 1 }} 
           showsVerticalScrollIndicator={false}
@@ -30,7 +32,7 @@ export function Screen({ children, scrollable = true, className, scrollViewProps
   }
 
   return (
-    <SafeLayout className={containerClass} edges={['top', 'left', 'right']} {...props}>
+    <SafeLayout className={cn("flex-1", className)} edges={['top', 'left', 'right']} {...props}>
       {children}
     </SafeLayout>
   );

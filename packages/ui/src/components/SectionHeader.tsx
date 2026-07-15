@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { cn } from '../utils/cn';
 
@@ -12,17 +12,37 @@ export interface SectionHeaderProps {
 
 export function SectionHeader({ title, actionText, onActionPress, className }: SectionHeaderProps) {
   return (
-    <View className={cn("flex-row justify-between items-center px-4 pt-5 pb-2", className)}>
-      <Text variant="h3" className="text-[#2B2E4A] font-bold">{title}</Text>
+    <View style={styles.container} className={className}>
+      <Text variant="h3" style={styles.title} className="text-[#11111E] font-extrabold tracking-tight">
+        {title}
+      </Text>
       {actionText && (
-        <Text 
-          variant="label" 
-          className="text-indigo-600 font-semibold"
-          onPress={onActionPress}
-        >
-          {actionText}
-        </Text>
+        <Pressable onPress={onActionPress}>
+          <View style={styles.actionWrapper}>
+            <Text className="text-[11px] font-extrabold text-[#4F46E5] uppercase tracking-wider">
+              {actionText}
+            </Text>
+          </View>
+        </Pressable>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingLeft: 20,   // Standardized 20px grid
+    paddingRight: 20,  // Standardized 20px grid
+    paddingTop: 28,    // Moderate top spacing
+    paddingBottom: 8,  // Clean bottom spacing
+  },
+  title: {
+    paddingTop: 0,     // Removed massive top gap
+  },
+  actionWrapper: {
+    opacity: 1,
+  }
+});
