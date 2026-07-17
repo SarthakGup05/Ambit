@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Pressable, ScrollView, StyleSheet, TextInput, FlatList, Dimensions, Alert, Platform } from 'react-native';
 import { Screen, Text } from '@repo/ui';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ScreenBackground } from '../../../components/common';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search, X, Megaphone, ShieldCheck, Calendar, AlertTriangle, ArrowRight, CheckCheck } from 'lucide-react-native';
@@ -230,17 +231,7 @@ export function NoticesScreen() {
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
-      {/* Rich, vivid background gradient */}
-      <LinearGradient
-        colors={['#D6E4FF', '#EEE0F8', '#FFE8DC']}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
-      {/* Background depth blobs */}
-      <View style={styles.blob1} />
-      <View style={styles.blob2} />
+      <ScreenBackground />
 
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <View style={styles.container}>
@@ -718,23 +709,5 @@ const styles = StyleSheet.create({
     fontFamily: 'ManropeBold',
     fontSize: 12,
     letterSpacing: 0.2,
-  },
-  blob1: {
-    position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(195, 226, 196, 0.25)',
-  },
-  blob2: {
-    position: 'absolute',
-    top: 240,
-    left: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(168, 209, 170, 0.15)',
   },
 });
