@@ -3,6 +3,8 @@ import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { Manrope_400Regular, Manrope_500Medium, Manrope_700Bold } from "@expo-google-fonts/manrope";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
+import { useEffect, useState } from "react";
+import { useAuth } from "../src/features/auth/hooks/useAuth";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -15,7 +17,23 @@ export default function RootLayout() {
     InterBold: Inter_700Bold,
   });
 
-  if (!fontsLoaded) {
+  const { initializeAuth } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    async function restoreSession() {
+      try {
+        await initializeAuth();
+      } catch (err) {
+        console.error("Failed to restore session on boot", err);
+      } finally {
+        setIsInitializing(false);
+      }
+    }
+    restoreSession();
+  }, [initializeAuth]);
+
+  if (!fontsLoaded || isInitializing) {
     return null;
   }
 
