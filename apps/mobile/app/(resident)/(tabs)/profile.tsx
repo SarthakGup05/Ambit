@@ -135,15 +135,15 @@ export default function ResidentProfileTab() {
           {/* Settings Sections */}
           <View style={styles.settingsContainer}>
             
-            {/* Section 1: Account Settings */}
+            {/* Section 1: Account & Society */}
             <Text style={styles.sectionLabel}>Account & Society</Text>
             <View style={styles.sectionCard}>
               <SettingItem
                 Icon={Building}
                 title="Switch Society"
                 description="Connect to another resident profile"
+                valueText={user?.flatNumber || "No Flat"}
                 onPress={() => {
-                  triggerHaptic();
                   Alert.alert("Society Management", "Multiple society switcher is coming soon.");
                 }}
               />
@@ -152,8 +152,8 @@ export default function ResidentProfileTab() {
                 Icon={UserCheck}
                 title="Family Members"
                 description="Manage co-resident access keys"
+                valueText="0 Active"
                 onPress={() => {
-                  triggerHaptic();
                   Alert.alert("Family Access", "Manage co-residents & tenant invites coming soon.");
                 }}
               />
@@ -167,7 +167,7 @@ export default function ResidentProfileTab() {
                 title="Push Notifications"
                 description="Visitor entry, notices, and alerts"
                 value={pushEnabled}
-                onValueChange={handleTogglePush}
+                onValueChange={setPushEnabled}
               />
               <View style={styles.divider} />
               <SettingToggleItem
@@ -175,7 +175,7 @@ export default function ResidentProfileTab() {
                 title="Email Updates"
                 description="Receive monthly maintenance bills"
                 value={emailEnabled}
-                onValueChange={handleToggleEmail}
+                onValueChange={setEmailEnabled}
               />
               <View style={styles.divider} />
               <SettingToggleItem
@@ -183,19 +183,22 @@ export default function ResidentProfileTab() {
                 title="Dark Mode"
                 description="Sleek dark themed interface"
                 value={darkMode}
-                onValueChange={handleToggleDark}
+                onValueChange={(val) => {
+                  setDarkMode(val);
+                  Alert.alert("Preferences", "Dark Mode will be available in the next release.");
+                }}
               />
             </View>
 
-            {/* Section 3: Help & Support */}
+            {/* Section 3: Support & Info */}
             <Text style={styles.sectionLabel}>Support & Info</Text>
             <View style={styles.sectionCard}>
               <SettingItem
                 Icon={HelpCircle}
                 title="Help Center"
                 description="FAQ, guides, and support chat"
+                valueText="FAQs"
                 onPress={() => {
-                  triggerHaptic();
                   Alert.alert("Support", "Support center is under construction.");
                 }}
               />
@@ -204,8 +207,8 @@ export default function ResidentProfileTab() {
                 Icon={FileText}
                 title="Terms & Privacy"
                 description="User agreement and data practices"
+                valueText="Read"
                 onPress={() => {
-                  triggerHaptic();
                   Alert.alert("Legal Docs", "Terms and Privacy docs are hosted on ambit.com.");
                 }}
               />
@@ -237,26 +240,43 @@ interface SettingItemProps {
   Icon: any;
   title: string;
   description: string;
+  valueText?: string;
   onPress: () => void;
 }
 
-function SettingItem({ Icon, title, description, onPress }: SettingItemProps) {
+function SettingItem({ Icon, title, description, valueText, onPress }: SettingItemProps) {
+  const triggerHaptic = () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handlePress = () => {
+    triggerHaptic();
+    onPress();
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => [
         pressed && styles.settingRowPressed,
       ]}
     >
       <View style={styles.settingRow}>
         <View style={styles.settingIconWrapper}>
-          <Icon size={18} color="#2B2E4A" />
+          <Icon size={15} color="#4A5568" strokeWidth={2.2} />
         </View>
         <View style={styles.settingTextContainer}>
-          <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[15px]">{title}</Text>
-          <Text variant="caption" className="text-[#6B6873] mt-0.5">{description}</Text>
+          <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[14.5px] leading-5">{title}</Text>
+          <Text variant="caption" className="text-[#8E8D94] text-[11.5px] mt-0.5">{description}</Text>
         </View>
-        <ChevronRight size={16} color="#A3A1A8" />
+        {valueText && (
+          <Text style={styles.valueText}>{valueText}</Text>
+        )}
+        <ChevronRight size={14} color="#A3A1A8" strokeWidth={2.5} style={{ marginLeft: 6 }} />
       </View>
     </Pressable>
   );
@@ -272,18 +292,31 @@ interface SettingToggleProps {
 }
 
 function SettingToggleItem({ Icon, title, description, value, onValueChange }: SettingToggleProps) {
+  const triggerHaptic = () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handleToggle = (val: boolean) => {
+    triggerHaptic();
+    onValueChange(val);
+  };
+
   return (
     <View style={styles.settingRow}>
       <View style={styles.settingIconWrapper}>
-        <Icon size={18} color="#2B2E4A" />
+        <Icon size={15} color="#4A5568" strokeWidth={2.2} />
       </View>
       <View style={styles.settingTextContainer}>
-        <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[15px]">{title}</Text>
-        <Text variant="caption" className="text-[#6B6873] mt-0.5">{description}</Text>
+        <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[14.5px] leading-5">{title}</Text>
+        <Text variant="caption" className="text-[#8E8D94] text-[11.5px] mt-0.5">{description}</Text>
       </View>
       <Switch
         value={value}
-        onValueChange={onValueChange}
+        onValueChange={handleToggle}
         trackColor={{ false: '#E4E4E7', true: '#7A9B76' }}
         thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : value ? '#FAF8F5' : '#FFFFFF'}
         ios_backgroundColor="#E4E4E7"
@@ -409,16 +442,16 @@ const styles = StyleSheet.create({
     color: '#6B6873',
   },
   settingsContainer: {
-    gap: 20,
+    gap: 16,
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'InterBold',
-    color: '#6B6873',
+    color: '#8E8D94',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     marginLeft: 4,
-    marginBottom: -12,
+    marginBottom: -8,
   },
   sectionCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.65)',
@@ -435,28 +468,36 @@ const styles = StyleSheet.create({
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    minHeight: 56,
   },
   settingRowPressed: {
-    backgroundColor: 'rgba(43, 46, 74, 0.04)',
+    backgroundColor: 'rgba(0, 0, 0, 0.045)',
   },
   settingIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(43, 46, 74, 0.06)',
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(74, 85, 104, 0.07)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 12,
   },
   settingTextContainer: {
     flex: 1,
+    paddingRight: 8,
+  },
+  valueText: {
+    fontSize: 13,
+    fontFamily: 'InterMedium',
+    color: '#8E8D94',
+    marginRight: 2,
   },
   divider: {
-    height: 1,
-    backgroundColor: 'rgba(28, 27, 31, 0.06)',
-    marginLeft: 66,
+    height: 0.5,
+    backgroundColor: 'rgba(28, 27, 31, 0.08)',
+    marginLeft: 56,
   },
   logoutButton: {
     flexDirection: 'row',
