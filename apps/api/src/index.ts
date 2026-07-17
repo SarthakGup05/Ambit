@@ -1,11 +1,10 @@
+import "./env.js"; // Initialize env vars before any other imports!
 import { createServer } from "node:http";
+import app from "./app.js";
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 
-const server = createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ message: "Hello from the API!" }));
-});
+const server = createServer(app);
 
 server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
