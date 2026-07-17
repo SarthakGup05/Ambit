@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 import { db } from "./db/index.js";
-import * as schema from "./db/schema.js";
+import * as schema from "./models/schema.js";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -18,14 +18,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  trustedOrigins: [
-    "ambit://",
-    ...(process.env.NODE_ENV === "development" ? [
-      "exp://",
-      "exp://**",
-      "exp://192.168.*.*:*/**",
-    ] : [])
-  ],
+  trustedOrigins: (request) => {
+    const origins = ["ambit://"];
+    const origin = request?.headers?.get("origin");
+    if (origin) origins.push(origin);
+    return origins;
+  },
   // Custom fields we added to the schema
   user: {
     additionalFields: {
@@ -35,9 +33,11 @@ export const auth = betterAuth({
       },
       societyId: {
         type: "string",
+        required: false,
       },
       flatNumber: {
         type: "string",
+        required: false,
       },
     },
   },
