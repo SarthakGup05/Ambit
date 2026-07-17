@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useAuthStore, type UserSession } from "../../../store/auth.store";
 import { authClient } from "../../../lib/auth-client";
+import { storage } from "../../../lib/storage";
 
 export function useAuth() {
   const { token, user, setAuth, clearAuth } = useAuthStore();
@@ -34,6 +35,10 @@ export function useAuth() {
         societyId: (data.user as any).societyId || null,
         flatNumber: (data.user as any).flatNumber || null,
       };
+
+      // Persist in secure local storage for offline-first instant boot
+      await storage.set("auth_token", sessionToken);
+      await storage.set("auth_user", JSON.stringify(userSession));
 
       // Update global state
       setAuth(sessionToken, userSession);
@@ -76,6 +81,10 @@ export function useAuth() {
         flatNumber: (data.user as any).flatNumber || null,
       };
 
+      // Persist in secure local storage
+      await storage.set("auth_token", sessionToken);
+      await storage.set("auth_user", JSON.stringify(userSession));
+
       // Update global state
       setAuth(sessionToken, userSession);
       return userSession;
@@ -95,6 +104,9 @@ export function useAuth() {
     } catch (err) {
       console.warn("Sign out request failed", err);
     } finally {
+      // Clear persistence and state
+      await storage.remove("auth_token");
+      await storage.remove("auth_user");
       clearAuth();
       setIsLoading(false);
     }
@@ -102,24 +114,48 @@ export function useAuth() {
 
   const initializeAuth = useCallback(async () => {
     try {
-      const response = await authClient.getSession();
-      if (response.data) {
-        const session = response.data;
-        const userSession: UserSession = {
-          id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          role: (session.user as any).role || "resident",
-          societyId: (session.user as any).societyId || null,
-          flatNumber: (session.user as any).flatNumber || null,
-        };
-        const cookies = authClient.getCookie() || "";
-        setAuth(cookies, userSession);
+      // 1. Instant local restore (Offline-first approach)
+      const cachedToken = await storage.get("auth_token");
+      const cachedUserJson = await storage.get("auth_user");
+      
+      if (cachedToken && cachedUserJson) {
+        const userSession = JSON.parse(cachedUserJson) as UserSession;
+        setAuth(cachedToken, userSession);
+      }
+
+      // 2. Background verification & validation with server
+      try {
+        const response = await authClient.getSession();
+        if (response.data) {
+          const session = response.data;
+          const userSession: UserSession = {
+            id: session.user.id,
+            name: session.user.name,
+            email: session.user.email,
+            role: (session.user as any).role || "resident",
+            societyId: (session.user as any).societyId || null,
+            flatNumber: (session.user as any).flatNumber || null,
+          };
+          const cookies = authClient.getCookie() || "";
+          
+          // Update persistence and state with fresh server data
+          await storage.set("auth_token", cookies);
+          await storage.set("auth_user", JSON.stringify(userSession));
+          setAuth(cookies, userSession);
+        } else if (response.error) {
+          // If server explicitly responds with auth error, session is invalid/expired
+          await storage.remove("auth_token");
+          await storage.remove("auth_user");
+          clearAuth();
+        }
+      } catch (netErr: any) {
+        // If it's a network reachability issue, gracefully let the user stay logged in offline
+        console.warn("Offline or backend unreachable, keeping local session active:", netErr.message || netErr);
       }
     } catch (err) {
       console.error("Failed to restore authenticated session:", err);
     }
-  }, [setAuth]);
+  }, [setAuth, clearAuth]);
 
   return {
     token,
