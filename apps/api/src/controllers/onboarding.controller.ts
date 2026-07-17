@@ -145,10 +145,10 @@ export async function guardOnboard(req: Request, res: Response, next: NextFuncti
       return res.status(403).json({ error: "Forbidden: Admin privileges required" });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password, gateNumber } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Name, email, and password are required for guard" });
+    if (!name || !email || !password || !gateNumber) {
+      return res.status(400).json({ error: "Name, email, password, and gate number are required" });
     }
 
     const headers = new Headers();
@@ -169,12 +169,13 @@ export async function guardOnboard(req: Request, res: Response, next: NextFuncti
       },
     });
 
-    // 2. Assign role 'guard' and set societyId using Drizzle
+    // 2. Assign role 'guard' and set societyId & flatNumber (gateNumber) using Drizzle
     const [updatedGuardUser] = await db
       .update(user)
       .set({
         role: "guard",
         societyId: req.societyId,
+        flatNumber: gateNumber.trim(),
       })
       .where(eq(user.id, newGuardUser.user.id))
       .returning();

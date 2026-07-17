@@ -64,3 +64,20 @@ export function requireSociety(req: Request, res: Response, next: NextFunction) 
 
   next();
 }
+
+/**
+ * Enforces that the authenticated user has the 'admin' role.
+ * Must be used after the 'authenticate' middleware.
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized: Authentication required" });
+  }
+
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden: Admin privileges required" });
+  }
+
+  next();
+}
+
