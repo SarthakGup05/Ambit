@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, Pressable, Platform, ScrollView, Alert } from 'react-native';
 import { Screen, Text } from '@repo/ui';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ScreenBackground } from '@/components/common';
+import { useRouter } from 'expo-router';
 import {
   Building2,
   Users,
@@ -9,68 +10,17 @@ import {
   ClipboardList,
   Megaphone,
   CreditCard,
+  ChevronRight,
 } from 'lucide-react-native';
 import Animated, { ZoomIn, FadeIn, FadeInUp } from 'react-native-reanimated';
-
-const ADMIN_ACTIONS = [
-  {
-    id: 'society-settings',
-    title: 'Society Settings',
-    description: 'Name, address, towers & invite code',
-    Icon: Building2,
-    colors: ['#5F67EC', '#474EE0'] as const,
-  },
-  {
-    id: 'manage-members',
-    title: 'Manage Members',
-    description: 'View residents, assign flats, remove members',
-    Icon: Users,
-    colors: ['#10B981', '#059669'] as const,
-  },
-  {
-    id: 'staff-directory',
-    title: 'Staff & Guards',
-    description: 'Add guards, assign gates, manage staff',
-    Icon: ShieldCheck,
-    colors: ['#F59E0B', '#D97706'] as const,
-  },
-  {
-    id: 'visitor-logs',
-    title: 'Visitor Logs',
-    description: 'Oversee all visitor entries across society',
-    Icon: ClipboardList,
-    colors: ['#8B5CF6', '#7C3AED'] as const,
-  },
-  {
-    id: 'notices-polls',
-    title: 'Notices & Polls',
-    description: 'Create, edit and manage announcements',
-    Icon: Megaphone,
-    colors: ['#F43F5E', '#E11D48'] as const,
-  },
-  {
-    id: 'plans-billing',
-    title: 'Plans & Billing',
-    description: 'Society plan management & upgrades',
-    Icon: CreditCard,
-    colors: ['#0EA5E9', '#0284C7'] as const,
-  },
-];
+import * as Haptics from 'expo-haptics';
 
 export default function ManageTab() {
+  const router = useRouter();
+
   return (
     <View style={StyleSheet.absoluteFillObject}>
-      {/* Premium background gradient */}
-      <LinearGradient
-        colors={['#E8F5E9', '#F4F7F4', '#FAF8F5']}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
-      {/* Background blobs */}
-      <View style={styles.blob1} />
-      <View style={styles.blob2} />
+      <ScreenBackground />
 
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <ScrollView
@@ -100,40 +50,78 @@ export default function ManageTab() {
             </View>
           </View>
 
-          {/* Action Cards Grid */}
-          <View style={styles.grid}>
-            {ADMIN_ACTIONS.map((action, index) => {
-              const { Icon } = action;
-              return (
-                <Animated.View
-                  key={action.id}
-                  entering={FadeInUp.duration(400).delay(100 + index * 80)}
-                >
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.card,
-                      pressed && styles.cardPressed,
-                    ]}
-                  >
-                    {/* Icon circle */}
-                    <View style={styles.iconCircle}>
-                      <LinearGradient
-                        colors={action.colors}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={StyleSheet.absoluteFillObject}
-                      />
-                      <View style={styles.iconGloss} />
-                      <Icon size={22} color="#FFFFFF" strokeWidth={2.2} />
-                    </View>
+          {/* Grouped Action Lists */}
+          <View style={styles.settingsContainer}>
+            
+            {/* Section 1: Operations */}
+            <Animated.View entering={FadeInUp.duration(400).delay(100)}>
+              <Text style={styles.sectionLabel}>Operations</Text>
+            </Animated.View>
+            
+            <Animated.View entering={FadeInUp.duration(400).delay(150)} style={styles.sectionCard}>
+              <ManageItem
+                Icon={Building2}
+                title="Society Settings"
+                description="Configure towers, flats & invite code"
+                valueText="AMB824"
+                onPress={() => router.push('/(admin)/society-settings')}
+              />
+              <View style={styles.divider} />
+              <ManageItem
+                Icon={ShieldCheck}
+                title="Guards & Gates"
+                description="Add security guards & gate check-ins"
+                valueText="2 Active"
+                onPress={() => router.push('/(admin)/staff-directory')}
+              />
+              <View style={styles.divider} />
+              <ManageItem
+                Icon={Users}
+                title="Resident Directory"
+                description="Approve and manage flat members"
+                valueText="18 Joined"
+                onPress={() => router.push('/(admin)/manage-members')}
+              />
+            </Animated.View>
 
-                    {/* Text */}
-                    <Text style={styles.cardTitle}>{action.title}</Text>
-                    <Text style={styles.cardDescription}>{action.description}</Text>
-                  </Pressable>
-                </Animated.View>
-              );
-            })}
+            {/* Section 2: Activity */}
+            <Animated.View entering={FadeInUp.duration(400).delay(200)}>
+              <Text style={styles.sectionLabel}>Activity & Comms</Text>
+            </Animated.View>
+            
+            <Animated.View entering={FadeInUp.duration(400).delay(250)} style={styles.sectionCard}>
+              <ManageItem
+                Icon={Megaphone}
+                title="Notices & Polls"
+                description="Publish announcements & active voting"
+                valueText="3 Live"
+                onPress={() => router.push('/(admin)/notices-polls')}
+              />
+              <View style={styles.divider} />
+              <ManageItem
+                Icon={ClipboardList}
+                title="Visitor Logs"
+                description="Review historical entry & exit approvals"
+                valueText="Logs"
+                onPress={() => router.push('/(admin)/visitor-logs')}
+              />
+            </Animated.View>
+
+            {/* Section 3: Plans */}
+            <Animated.View entering={FadeInUp.duration(400).delay(300)}>
+              <Text style={styles.sectionLabel}>Plan & Upgrades</Text>
+            </Animated.View>
+            
+            <Animated.View entering={FadeInUp.duration(400).delay(350)} style={styles.sectionCard}>
+              <ManageItem
+                Icon={CreditCard}
+                title="SaaS Plan"
+                description="Society level subscription plan and billing"
+                valueText="Free Plan"
+                onPress={() => Alert.alert("Subscription & Billing", "Plan upgrade via Razorpay coming soon.")}
+              />
+            </Animated.View>
+
           </View>
         </ScrollView>
       </Screen>
@@ -141,6 +129,54 @@ export default function ManageTab() {
   );
 }
 
+// ─── Shared Manage List Item Component ──────────────────────────────────────
+interface ManageItemProps {
+  Icon: any;
+  title: string;
+  description: string;
+  valueText?: string;
+  onPress: () => void;
+}
+
+function ManageItem({ Icon, title, description, valueText, onPress }: ManageItemProps) {
+  const triggerHaptic = () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handlePress = () => {
+    triggerHaptic();
+    onPress();
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [
+        pressed && styles.itemPressed,
+      ]}
+    >
+      <View style={styles.itemRow}>
+        <View style={styles.iconWrapper}>
+          <Icon size={15} color="#4A5568" strokeWidth={2.2} />
+        </View>
+        <View style={styles.textContainer}>
+          <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[14.5px] leading-5">{title}</Text>
+          <Text variant="caption" className="text-[#8E8D94] text-[11.5px] mt-0.5">{description}</Text>
+        </View>
+        {valueText && (
+          <Text style={styles.valueText}>{valueText}</Text>
+        )}
+        <ChevronRight size={14} color="#A3A1A8" strokeWidth={2.5} style={{ marginLeft: 6 }} />
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
@@ -190,83 +226,63 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 4,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 14,
+  settingsContainer: {
+    gap: 16,
+    marginTop: 8,
   },
-  card: {
-    width: '100%',
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: 'InterBold',
+    color: '#8E8D94',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginLeft: 4,
+    marginBottom: -8,
+  },
+  sectionCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.55)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 24,
-    padding: 20,
+    overflow: 'hidden',
     shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 12,
-    elevation: 3,
+    elevation: 2,
   },
-  cardPressed: {
-    transform: [{ scale: 0.97 }],
-    opacity: 0.85,
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    minHeight: 56,
   },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    overflow: 'hidden',
+  itemPressed: {
+    backgroundColor: 'rgba(0, 0, 0, 0.045)',
+  },
+  iconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(74, 85, 104, 0.07)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-    shadowColor: '#1E293B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginRight: 12,
   },
-  iconGloss: {
-    position: 'absolute',
-    top: 3,
-    left: 5,
-    width: 18,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  textContainer: {
+    flex: 1,
+    paddingRight: 8,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontFamily: 'ManropeBold',
-    fontWeight: 'bold',
-    color: '#11111E',
-    marginBottom: 4,
+  valueText: {
+    fontSize: 13,
+    fontFamily: 'InterMedium',
+    color: '#8E8D94',
+    marginRight: 2,
   },
-  cardDescription: {
-    fontSize: 12,
-    fontFamily: 'Inter',
-    color: '#6B6873',
-    lineHeight: 17,
-  },
-  blob1: {
-    position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(195, 226, 196, 0.25)',
-  },
-  blob2: {
-    position: 'absolute',
-    bottom: 120,
-    left: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(168, 209, 170, 0.15)',
+  divider: {
+    height: 0.5,
+    backgroundColor: 'rgba(28, 27, 31, 0.08)',
+    marginLeft: 56,
   },
 });
