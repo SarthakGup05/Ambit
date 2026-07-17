@@ -14,7 +14,11 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { token, user, setAuth } = useAuthStore();
   
-  const [step, setStep] = useState<Step>("select-role");
+  const [step, setStep] = useState<Step>(() => {
+    if (user?.role === "admin") return "admin-form";
+    if (user?.role === "resident") return "resident-form";
+    return "select-role";
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
