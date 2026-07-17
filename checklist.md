@@ -3,19 +3,19 @@
 This is the living PRD checklist for the Ambit Multi-Tenant SaaS platform.
 
 ## 🏢 Multi-Tenancy & SaaS Architecture
-- [ ] Database isolation using `society_id` on all non-global tables:
-  - [ ] `users` scoped to a society
-  - [ ] `visitors` scoped to a society
-  - [ ] `guest_passes` scoped to a society
-  - [ ] `notices` scoped to a society
-  - [ ] `polls` scoped to a society
-  - [ ] `complaints` scoped to a society
-  - [ ] `amenities` scoped to a society
-  - [ ] `bookings` scoped to a society
-- [ ] Express middleware to resolve `society_id` from auth context and scope all database queries automatically.
+- [x] Database isolation using `society_id` on all non-global tables:
+  - [x] `users` scoped to a society
+  - [x] `visitors` scoped to a society
+  - [x] `guest_passes` scoped to a society
+  - [x] `notices` scoped to a society
+  - [x] `polls` scoped to a society
+  - [x] `complaints` scoped to a society
+  - [x] `amenities` scoped to a society
+  - [x] `bookings` scoped to a society
+- [x] Express middleware to resolve `society_id` from auth context and scope all database queries automatically.
 - [ ] Multi-tenant Onboarding Flow:
-  - [ ] **Admin Onboarding**: Admin registers → creates a society (name, address, flat/tower structure) → generates unique invite code.
-  - [ ] **Resident Onboarding**: Resident registers → enters/scans society invite code → joins society → selects flat number.
+  - [x] **Admin Onboarding**: Admin registers → creates a society (name, address, flat/tower structure) → generates unique invite code.
+  - [x] **Resident Onboarding**: Resident registers → enters/scans society invite code → joins society → selects flat number.
   - [ ] **Guard Onboarding**: Guard invited by admin → assigned to gate.
 - [ ] Society Plans & Upgrades:
   - [ ] Billing screen at society level (Starter Free vs. Pro Paid).
@@ -42,12 +42,12 @@ This is the living PRD checklist for the Ambit Multi-Tenant SaaS platform.
 - [ ] Service provider check-in lookup.
 
 ### 3. Society Admin Dashboard & Features
-- [ ] Central dashboard analytics (active visitors, billing status, amenity use).
+- [x] Central dashboard analytics (active visitors, billing status, amenity use).
 - [ ] Flat and Tower configuration editor.
-- [ ] Manage members (approve residents, configure guards).
-- [ ] Manage bulletins (post notices, create polls).
+- [x] Manage members (approve residents, configure guards).
+- [x] Manage bulletins (post notices, create polls).
 - [ ] Manage amenities (define booking capacities, hours).
-- [ ] Review society-wide visitor histories.
+- [x] Review society-wide visitor histories.
 
 ## 🎟️ Signature Feature: QR Guest Boarding Pass
 - [ ] Resident pre-approves guest → generates a cryptographically signed, single-use token with short expiration.
@@ -64,7 +64,7 @@ This is the living PRD checklist for the Ambit Multi-Tenant SaaS platform.
 ## ⚡ Non-Functional & Quality Requirements
 - [ ] Push notifications: configure Expo push token registry.
 - [ ] Socket.io integration: establish instant event propagation for gate check-ins.
-- [ ] Haptic feedback: integrate light impacts on approvals/successes.
+- [x] Haptic feedback: integrate light impacts on approvals/successes.
 - [ ] Skeleton loaders on all async screens.
 - [ ] Empty state fallback screens.
-- [ ] Version tagging and terms of service stubs.
+- [x] Version tagging and terms of service stubs.
