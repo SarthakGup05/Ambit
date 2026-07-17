@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions, Platform, ScrollView, Pressable, Switch, 
 import { Screen, Text } from '@repo/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  User,
+  Shield,
   Bell,
   Mail,
   Moon,
@@ -12,18 +12,19 @@ import {
   FileText,
   LogOut,
   Building,
-  UserCheck,
+  CreditCard,
+  Sliders,
 } from 'lucide-react-native';
 import Animated, { ZoomIn, FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../../../src/features/auth/hooks/useAuth';
 
-export default function ResidentProfileTab() {
+export default function AdminProfileTab() {
   const { logout, user } = useAuth();
 
   // Local settings state
   const [pushEnabled, setPushEnabled] = useState(true);
-  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [emailEnabled, setEmailEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
   // Micro-interaction trigger
@@ -63,9 +64,8 @@ export default function ResidentProfileTab() {
     );
   };
 
-  // Get user initials for premium avatar
   const getInitials = (name?: string) => {
-    if (!name) return "R";
+    if (!name) return "A";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -78,7 +78,7 @@ export default function ResidentProfileTab() {
     <View style={StyleSheet.absoluteFillObject}>
       {/* Premium calm background */}
       <LinearGradient
-        colors={['#FDFCFB', '#F4F1EA', '#FAF8F5']}
+        colors={['#FAF8F5', '#F0EDE8', '#FAF8F5']}
         locations={[0, 0.5, 1]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
@@ -98,8 +98,8 @@ export default function ResidentProfileTab() {
               <Animated.View entering={ZoomIn.duration(400).delay(50)}>
                 <Text style={styles.brandText}>Ambit</Text>
               </Animated.View>
-              <View style={styles.residentBadge}>
-                <Text style={styles.residentBadgeText}>RESIDENT</Text>
+              <View style={styles.adminBadge}>
+                <Text style={styles.adminBadgeText}>ADMIN</Text>
               </View>
             </View>
           </View>
@@ -108,7 +108,7 @@ export default function ResidentProfileTab() {
           <Animated.View entering={FadeInUp.duration(400).delay(100)} style={styles.profileCard}>
             <View style={styles.avatarContainer}>
               <LinearGradient
-                colors={['#C3E2C4', '#7A9B76']}
+                colors={['#5F67EC', '#474EE0']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFillObject}
@@ -118,43 +118,41 @@ export default function ResidentProfileTab() {
             </View>
 
             <View style={styles.profileInfo}>
-              <Text style={styles.userName}>{user?.name || "Resident User"}</Text>
+              <Text style={styles.userName}>{user?.name || "Admin User"}</Text>
               <Text style={styles.userEmail}>{user?.email || ""}</Text>
 
-              {user?.flatNumber && (
-                <View style={styles.flatPill}>
-                  <Building size={12} color="#6B6873" style={{ marginRight: 4 }} />
-                  <Text style={styles.flatText}>
-                    {user.flatNumber}
-                  </Text>
-                </View>
-              )}
+              <View style={styles.societyPill}>
+                <Building size={12} color="#5F67EC" style={{ marginRight: 4 }} />
+                <Text style={styles.societyText}>
+                  Society Manager
+                </Text>
+              </View>
             </View>
           </Animated.View>
 
           {/* Settings Sections */}
           <View style={styles.settingsContainer}>
             
-            {/* Section 1: Account Settings */}
-            <Text style={styles.sectionLabel}>Account & Society</Text>
+            {/* Section 1: Admin & Plan Settings */}
+            <Text style={styles.sectionLabel}>Plan & Billing</Text>
             <View style={styles.sectionCard}>
               <SettingItem
-                Icon={Building}
-                title="Switch Society"
-                description="Connect to another resident profile"
+                Icon={CreditCard}
+                title="SaaS Subscription"
+                description="Manage your Starter Free / Pro Plan status"
                 onPress={() => {
                   triggerHaptic();
-                  Alert.alert("Society Management", "Multiple society switcher is coming soon.");
+                  Alert.alert("Subscription", "Subscription management coming soon.");
                 }}
               />
               <View style={styles.divider} />
               <SettingItem
-                Icon={UserCheck}
-                title="Family Members"
-                description="Manage co-resident access keys"
+                Icon={Sliders}
+                title="Society Configurations"
+                description="Configure towers, flats & structures"
                 onPress={() => {
                   triggerHaptic();
-                  Alert.alert("Family Access", "Manage co-residents & tenant invites coming soon.");
+                  Alert.alert("Configurations", "Tower and flat layout builder coming soon.");
                 }}
               />
             </View>
@@ -165,15 +163,15 @@ export default function ResidentProfileTab() {
               <SettingToggleItem
                 Icon={Bell}
                 title="Push Notifications"
-                description="Visitor entry, notices, and alerts"
+                description="Admin approvals and society alerts"
                 value={pushEnabled}
                 onValueChange={handleTogglePush}
               />
               <View style={styles.divider} />
               <SettingToggleItem
                 Icon={Mail}
-                title="Email Updates"
-                description="Receive monthly maintenance bills"
+                title="Email Reports"
+                description="Weekly visitor entry logs & summaries"
                 value={emailEnabled}
                 onValueChange={handleToggleEmail}
               />
@@ -317,18 +315,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
-  residentBadge: {
+  adminBadge: {
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 16,
-    backgroundColor: 'rgba(122, 155, 118, 0.1)',
+    backgroundColor: 'rgba(95, 103, 236, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(122, 155, 118, 0.25)',
+    borderColor: 'rgba(95, 103, 236, 0.25)',
   },
-  residentBadgeText: {
+  adminBadgeText: {
     fontSize: 10,
     fontFamily: 'InterBold',
-    color: '#7A9B76',
+    color: '#5F67EC',
     letterSpacing: 1.2,
   },
   profileCard: {
@@ -355,7 +353,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#FFFFFF',
-    shadowColor: '#7A9B76',
+    shadowColor: '#5F67EC',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -393,20 +391,20 @@ const styles = StyleSheet.create({
     color: '#6B6873',
     marginTop: 2,
   },
-  flatPill: {
+  societyPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.03)',
+    backgroundColor: 'rgba(95, 103, 236, 0.06)',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 3,
     marginTop: 8,
   },
-  flatText: {
+  societyText: {
     fontSize: 11,
     fontFamily: 'InterMedium',
-    color: '#6B6873',
+    color: '#5F67EC',
   },
   settingsContainer: {
     gap: 20,
