@@ -1,2 +1,2 @@
 // Export common components here
-export {};
+export { ScreenBackground } from './ScreenBackground';
