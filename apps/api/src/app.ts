@@ -3,6 +3,9 @@ import cors from "cors";
 import { auth } from "./auth.js";
 import { toNodeHandler } from "better-auth/node";
 import onboardingRouter from "./routes/onboarding.routes.js";
+import adminRouter from "./routes/admin.routes.js";
+import noticesRouter from "./routes/notices.routes.js";
+import pollsRouter from "./routes/polls.routes.js";
 
 const app = express();
 
@@ -18,6 +21,15 @@ app.all("/api/auth/*", (req, res) => {
 
 // Onboarding Routes
 app.use("/api/onboarding", onboardingRouter);
+
+// Admin Routes
+app.use("/api/admin", adminRouter);
+
+// Notices Routes
+app.use("/api/notices", noticesRouter);
+
+// Polls Routes
+app.use("/api/polls", pollsRouter);
 
 // Health check route
 app.get("/health", (req: Request, res: Response) => {
