@@ -8,22 +8,46 @@ Welcome to the **Ambit** monorepo workspace, built with [Turborepo](https://turb
 
 This monorepo manages all the apps and packages for the Ambit ecosystem:
 
-### Apps (`apps/`)
-
-- [**`api`**](file:///c:/Users/DELL/Desktop/portl/apps/api): Backend Node.js / TypeScript API server.
-  * Uses Express, Drizzle ORM, and better-auth.
-  * Supports multi-tenant isolation via dynamic society validation.
-  * Includes Docker infrastructure for containerized deployment.
-- [**`mobile`**](file:///c:/Users/DELL/Desktop/portl/apps/mobile): Mobile client built with [Expo SDK 54](https://expo.dev/), [Expo Router](https://docs.expo.dev/router/introduction/), [Zustand](https://zustand.docs.pmnd.rs/), [NativeWind v4](https://www.nativewind.dev/), and [Tailwind CSS v3](https://tailwindcss.com/).
-  * Custom 3-step welcome onboarding carousel with premium illustration assets.
-  * Unified glassmorphic bottom tab navigation for both Residents and Admins.
-  * Interactive settings panels with spring-based toggles and tactile haptic feedback.
-
-### Shared Packages (`packages/`)
-
-- [**`typescript-config`**](file:///c:/Users/DELL/Desktop/portl/packages/typescript-config): Centralized `tsconfig.json` files for standard compilation configuration.
-- [**`eslint-config`**](file:///c:/Users/DELL/Desktop/portl/packages/eslint-config): Shared linting rules.
-- [**`ui`**](file:///c:/Users/DELL/Desktop/portl/packages/ui): Shared React Native component design system.
+```
+ambit/
+├── apps/
+│   ├── api/                         # Node.js + Express + Drizzle Backend API
+│   │   ├── src/
+│   │   │   ├── controllers/         # Onboarding & business logic controllers
+│   │   │   ├── db/                  # Drizzle DB connection
+│   │   │   ├── models/              # Postgres database schema
+│   │   │   ├── routes/              # Express endpoint routers
+│   │   │   ├── auth.ts              # better-auth configuration
+│   │   │   └── index.ts             # App entry point
+│   │   ├── Dockerfile               # Production API image builder
+│   │   └── package.json
+│   │
+│   └── mobile/                      # Expo SDK 54 Mobile Client App
+│       ├── app/                     # Expo Router file-based screens
+│       │   ├── (auth)/              # Landing page, Register, Login
+│       │   ├── (welcome)/           # 3-Step welcome carousel
+│       │   ├── (onboarding)/        # Society signup / join selections
+│       │   ├── (resident)/          # Resident dashboards tab group
+│       │   ├── (admin)/             # Admin cockpit & manage tab group
+│       │   ├── (guard)/             # Security guard entries log
+│       │   ├── _layout.tsx
+│       │   └── index.tsx            # Main router redirection switch
+│       ├── assets/                  # Fonts & illustration graphics
+│       ├── src/
+│       │   ├── features/            # Feature-specific components
+│       │   ├── lib/                 # Auth-client & secure store utils
+│       │   └── store/               # Zustand global state stores
+│       └── package.json
+│
+├── packages/                        # Shared monorepo workspace packages
+│   ├── eslint-config/               # Shared ESLint parameters
+│   ├── typescript-config/           # Centralized TS compiler configs
+│   └── ui/                          # Shared UI design-system components
+│
+├── docker-compose.yml               # Development multi-container script
+├── pnpm-workspace.yaml              # Workspace directory configurations
+└── turbo.json                       # Turborepo task configuration
+```
 
 ---
 
