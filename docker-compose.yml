@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ambit-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: ambit_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: ambit-api
+    restart: always
+    ports:
+      - "3002:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:password123@db:5432/ambit_db
+      - BETTER_AUTH_API_KEY=ba_yqmsrllo32fl7ftf18terhfq4e2k3180
+      - BETTER_AUTH_URL=http://localhost:3002
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/packages/eslint-config/node_modules
+      - /app/packages/typescript-config/node_modules
+      - /app/packages/ui/node_modules
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
