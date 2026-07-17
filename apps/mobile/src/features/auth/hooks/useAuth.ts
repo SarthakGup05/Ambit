@@ -52,7 +52,7 @@ export function useAuth() {
     }
   }, [setAuth]);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string, role: "admin" | "resident") => {
     setIsLoading(true);
     setError(null);
     try {
@@ -60,6 +60,7 @@ export function useAuth() {
         email,
         password,
         name,
+        role,
       });
 
       if (response.error) {

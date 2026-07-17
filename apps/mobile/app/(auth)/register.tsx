@@ -25,6 +25,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "resident">("resident");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export default function RegisterScreen() {
     setError(null);
 
     try {
-      await register(name, email, password);
+      await register(name, email, password, role);
       router.replace("/");
     } catch (err: any) {
       // Error is handled in the useAuth hook
@@ -130,6 +131,45 @@ export default function RegisterScreen() {
                     <Eye size={20} color="#9CA3AF" />
                   )}
                 </Pressable>
+              </View>
+
+              {/* Role Selection */}
+              <View style={styles.roleSelectorContainer}>
+                <Text style={styles.roleLabel}>I want to sign up as:</Text>
+                <View style={styles.roleButtonsRow}>
+                  <Pressable
+                    style={[
+                      styles.roleButton,
+                      role === "resident" && styles.roleButtonActive,
+                    ]}
+                    onPress={() => setRole("resident")}
+                  >
+                    <RNText
+                      style={[
+                        styles.roleButtonText,
+                        role === "resident" && styles.roleButtonTextActive,
+                      ]}
+                    >
+                      Resident
+                    </RNText>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.roleButton,
+                      role === "admin" && styles.roleButtonActive,
+                    ]}
+                    onPress={() => setRole("admin")}
+                  >
+                    <RNText
+                      style={[
+                        styles.roleButtonText,
+                        role === "admin" && styles.roleButtonTextActive,
+                      ]}
+                    >
+                      Society Admin
+                    </RNText>
+                  </Pressable>
+                </View>
               </View>
 
               {/* Space helper */}
@@ -341,6 +381,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "InterBold",
     fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  roleSelectorContainer: {
+    marginVertical: 4,
+    gap: 8,
+  },
+  roleLabel: {
+    fontSize: 14,
+    color: "#5E5D6A",
+    fontFamily: "InterSemiBold",
+    marginBottom: 4,
+  },
+  roleButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  roleButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E4E4E7",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  roleButtonActive: {
+    backgroundColor: "#11111E",
+    borderColor: "#11111E",
+  },
+  roleButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#5E5D6A",
+    fontFamily: "InterSemiBold",
+  },
+  roleButtonTextActive: {
     color: "#FFFFFF",
   },
 });
