@@ -15,13 +15,7 @@ import { X, Inbox, Check, UserCheck, Megaphone, MessageSquare, Bell } from 'luci
 
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.82;
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  body: string;
-  isRead: boolean;
-  createdAt: string;
-}
+import { NotificationItem } from '@/services/NotificationService';
 
 interface NotificationDrawerProps {
   visible: boolean;

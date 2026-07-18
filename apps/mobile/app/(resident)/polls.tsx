@@ -7,22 +7,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, BarChart3, Clock, Check } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { api } from '@/lib/axios';
-
-interface PollOptionTally {
-  option: string;
-  votes: number;
-}
-
-interface Poll {
-  id: string;
-  question: string;
-  options: string[];
-  expiresAt: string;
-  userVotedOption: string | null;
-  results: PollOptionTally[];
-  totalVotes: number;
-}
+import { PollService, Poll } from '@/services/PollService';
 
 const FALLBACK_POLLS: Poll[] = [
   {
@@ -56,9 +41,9 @@ export default function PollsScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await api.get('/api/polls');
-      if (response.data && response.data.polls && response.data.polls.length > 0) {
-        setPolls(response.data.polls);
+      const list = await PollService.getPolls();
+      if (list && list.length > 0) {
+        setPolls(list);
       } else {
         setPolls(FALLBACK_POLLS);
       }
@@ -83,7 +68,7 @@ export default function PollsScreen() {
   const handleVote = async (pollId: string, chosenOption: string) => {
     triggerHaptic();
     try {
-      await api.post(`/api/polls/${pollId}/vote`, { option: chosenOption });
+      await PollService.votePoll(pollId, chosenOption);
       setPolls((prevPolls) =>
         prevPolls.map((p) => {
           if (p.id === pollId) {

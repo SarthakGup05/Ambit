@@ -7,16 +7,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, UserCheck, Check, X, ShieldAlert } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { api } from '@/lib/axios';
-
-interface Visitor {
-  id: string;
-  name: string;
-  phone: string;
-  purpose: string;
-  status: 'pending' | 'approved' | 'denied' | 'checked_in' | 'checked_out';
-  createdAt: string;
-}
+import { VisitorService, Visitor } from '@/services/VisitorService';
 
 const FALLBACK_VISITORS: Visitor[] = [
   {
@@ -53,9 +44,9 @@ export default function VisitorApprovalsScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await api.get('/api/visitors/flat');
-      if (response.data && response.data.visitors && response.data.visitors.length > 0) {
-        setVisitors(response.data.visitors);
+      const list = await VisitorService.getFlatVisitors();
+      if (list && list.length > 0) {
+        setVisitors(list);
       } else {
         setVisitors(FALLBACK_VISITORS);
       }
@@ -80,7 +71,7 @@ export default function VisitorApprovalsScreen() {
   const handleAction = async (id: string, action: 'approved' | 'denied') => {
     triggerHaptic();
     try {
-      await api.patch(`/api/visitors/${id}/status`, { status: action });
+      await VisitorService.updateVisitorStatus(id, action);
       setVisitors((prev) =>
         prev.map((v) => (v.id === id ? { ...v, status: action } : v))
       );

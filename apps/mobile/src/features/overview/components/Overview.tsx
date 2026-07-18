@@ -28,25 +28,10 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
-import { api } from '@/lib/axios';
 import { Booking } from '@/features/bookings/api';
 import { NotificationDrawer } from './NotificationDrawer';
-
-interface Notice {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  createdAt: string;
-}
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  body: string;
-  isRead: boolean;
-  createdAt: string;
-}
+import { OverviewService, Notice } from '@/services/OverviewService';
+import { NotificationService, NotificationItem } from '@/services/NotificationService';
 
 const QUICK_ACTIONS = [
   {
@@ -128,15 +113,15 @@ export function Overview() {
 
   const loadDashboard = useCallback(async () => {
     try {
-      const [noticesRes, bookingsRes, notifsRes] = await Promise.all([
-        api.get('/api/notices'),
-        api.get('/api/bookings').catch(() => ({ data: { bookings: [] } })),
-        api.get('/api/notifications').catch(() => ({ data: { notifications: [] } })),
+      const [noticesList, bookingsList, notifsList] = await Promise.all([
+        OverviewService.getNotices(),
+        OverviewService.getBookings().catch(() => []),
+        NotificationService.getNotifications().catch(() => []),
       ]);
 
-      setNotices(noticesRes.data?.notices || []);
-      setBookings(bookingsRes.data?.bookings || []);
-      setNotificationsList(notifsRes.data?.notifications || []);
+      setNotices(noticesList);
+      setBookings(bookingsList);
+      setNotificationsList(notifsList);
     } catch (err) {
       console.warn('Failed to load overview metrics:', err);
     } finally {
@@ -167,7 +152,7 @@ export function Overview() {
   const handleMarkAllRead = async () => {
     triggerHaptic();
     try {
-      await api.post('/api/notifications/read-all');
+      await NotificationService.markAllAsRead();
       setNotificationsList(notificationsList.map((n) => ({ ...n, isRead: true })));
     } catch {
       Alert.alert('Error', 'Could not clear notifications');
@@ -177,10 +162,11 @@ export function Overview() {
   const handleMarkSingleRead = async (id: string) => {
     triggerHaptic();
     try {
-      await api.patch(`/api/notifications/${id}/read`);
+      await NotificationService.markAsRead(id);
       setNotificationsList(notificationsList.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     } catch {
       // Local fallback
+      setNotificationsList(notificationsList.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     }
   };
 

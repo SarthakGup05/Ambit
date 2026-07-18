@@ -27,15 +27,7 @@ import {
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { api } from '@/lib/axios';
-
-interface GuestPass {
-  id: string;
-  guestName: string;
-  token: string;
-  validTo: string;
-  isUsed: boolean;
-}
+import { GuestPassService, GuestPass } from '@/services/GuestPassService';
 
 const FALLBACK_PASSES: GuestPass[] = [
   {
@@ -72,9 +64,9 @@ export default function PreApproveGuestScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await api.get('/api/guest-passes');
-      if (response.data && response.data.guestPasses && response.data.guestPasses.length > 0) {
-        setPasses(response.data.guestPasses);
+      const list = await GuestPassService.getResidentGuestPasses();
+      if (list && list.length > 0) {
+        setPasses(list);
       } else {
         setPasses(FALLBACK_PASSES);
       }
@@ -105,12 +97,9 @@ export default function PreApproveGuestScreen() {
     setIsSubmitting(true);
 
     try {
-      const response = await api.post('/api/guest-passes', {
-        guestName: guestName.trim(),
-        validTo: new Date(Date.now() + 86400000).toISOString(), // 24 Hours validity
-      });
+      const validToDate = new Date(Date.now() + 86400000).toISOString(); // 24 Hours validity
+      const newPass = await GuestPassService.createGuestPass(guestName.trim(), validToDate);
 
-      const newPass = response.data?.guestPass;
       if (newPass) {
         setPasses([newPass, ...passes]);
       } else {
@@ -118,7 +107,7 @@ export default function PreApproveGuestScreen() {
           id: `gp_${Date.now()}`,
           guestName: guestName.trim(),
           token: Math.random().toString(36).substring(2, 8).toUpperCase(),
-          validTo: new Date(Date.now() + 86400000).toISOString(),
+          validTo: validToDate,
           isUsed: false,
         };
         setPasses([localNew, ...passes]);
