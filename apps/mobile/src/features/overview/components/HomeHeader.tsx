@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Platform, Image } from 'react-native';
 import { Text } from '@repo/ui';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { BellIcon } from '../../../components/icons/BellIcon';
@@ -9,8 +9,13 @@ export function HomeHeader() {
     <View style={styles.container}>
       {/* Top Brand & Notification row */}
       <View style={styles.headerTop}>
-        <Animated.View entering={ZoomIn.duration(400).delay(50)}>
-          <Text style={styles.brandText}>Ambit</Text>
+        <Animated.View entering={ZoomIn.duration(400).delay(50)} style={styles.brandRow}>
+          <Image 
+            source={require('../../../../assets/ambit_logo.png')} 
+            style={styles.logoImage} 
+            resizeMode="contain" 
+          />
+          <Text style={styles.brandText}>mbit</Text>
         </Animated.View>
 
         {/* Bell Button — dual ring glassmorphic */}
@@ -69,15 +74,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  logoImage: {
+    width: 28,
+    height: 28,
+  },
   brandText: {
-    fontFamily: Platform.select({
-      ios: 'Snell Roundhand',
-      android: 'cursive',
-      default: 'serif',
-    }),
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#1C1B1F',
+    fontFamily: 'ManropeBold',
+    letterSpacing: -0.5,
   },
   greetingSection: {
     marginTop: 2,

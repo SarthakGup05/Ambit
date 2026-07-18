@@ -8,6 +8,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Text } from "@repo/ui";
 import { useRouter } from "expo-router";
@@ -100,6 +101,16 @@ export default function WelcomeScreen() {
       <View style={styles.blob1} />
       <View style={styles.blob2} />
       <View style={styles.blob3} />
+
+      {/* Top Brand Header */}
+      <Animated.View entering={FadeInDown.duration(500)} style={styles.brandHeader}>
+        <Image
+          source={require("../../assets/ambit_logo.png")}
+          style={styles.headerLogoImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.headerBrandText}>mbit</Text>
+      </Animated.View>
 
       {/* Skip button */}
       {!isLastSlide && (
@@ -232,6 +243,26 @@ function DotIndicator({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  brandHeader: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 60 : 36,
+    left: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+    gap: 2,
+  },
+  headerLogoImage: {
+    width: 32,
+    height: 32,
+  },
+  headerBrandText: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#1C1B1F",
+    fontFamily: "ManropeBold",
+    letterSpacing: -0.5,
   },
   scrollView: {
     flex: 1,
