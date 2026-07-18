@@ -4,6 +4,7 @@ import { Text } from '@repo/ui';
 import { type } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { useNotificationStore } from '@/store/notification.store';
 
 const ACTIVE = '#2E7D32';
 const INACTIVE = '#9CA3AF';
@@ -29,6 +30,7 @@ type Props = {
 
 export function RoleTabBar({ state, navigation, tabs }: Props) {
   const insets = useSafeAreaInsets();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   const triggerHaptic = () => {
     try {
@@ -64,12 +66,19 @@ export function RoleTabBar({ state, navigation, tabs }: Props) {
 
           return (
             <Pressable key={tab.name} onPress={onPress} style={styles.item}>
-              <Icon
-                size={22}
-                color={color}
-                strokeWidth={isFocused ? 2.4 : 2}
-                fill={isFocused ? color : 'transparent'}
-              />
+              <View style={styles.iconContainer}>
+                <Icon
+                  size={22}
+                  color={color}
+                  strokeWidth={isFocused ? 2.4 : 2}
+                  fill={isFocused ? color : 'transparent'}
+                />
+                {tab.name === 'notifications' && unreadCount > 0 && (
+                  <View style={styles.badgeContainer}>
+                    <Text style={styles.badgeText}>{unreadCount}</Text>
+                  </View>
+                )}
+              </View>
               <Text
                 variant="caption"
                 weight="semibold"
@@ -121,5 +130,31 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: ACTIVE,
     marginTop: 2,
+  },
+  iconContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -5,
+    right: -8,
+    backgroundColor: '#2E7D32',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontFamily: 'InterBold',
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
