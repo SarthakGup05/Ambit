@@ -46,10 +46,10 @@ export default function Home() {
 
   // 4. Authenticated and has society -> Route to specific dashboard
   if (user.role === "admin") {
-    return <Redirect href="/(admin)" />; // Admin dashboard
+    return <Redirect href="/(admin)/(tabs)" />;
   } else if (user.role === "guard") {
-    return <Redirect href="/(guard)" />; // Guard dashboard
+    return <Redirect href="/(guard)/(tabs)" />;
   } else {
-    return <Redirect href="/(resident)" />; // Resident dashboard
+    return <Redirect href="/(resident)/(tabs)" />;
   }
 }
