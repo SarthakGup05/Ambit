@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, Dimensions, Platform } from "react-native";
+import { View, StyleSheet, Dimensions, Platform, Image } from "react-native";
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -17,25 +17,27 @@ interface AnimatedSplashProps {
 
 export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   // Animatable Shared Values
-  const logoScale = useSharedValue(0);
+  const logoScale = useSharedValue(0.2);
   const brandTextScale = useSharedValue(0.7);
   const brandTextOpacity = useSharedValue(0);
+  const exitScale = useSharedValue(1);
   const containerOpacity = useSharedValue(1);
 
   useEffect(() => {
-    // 1. Zoom/fade in logo dot + brand text
+    // 1. Entrance: Zoom & fade in logo + brand text
     logoScale.value = withTiming(1, { duration: 600 });
     brandTextScale.value = withDelay(150, withTiming(1, { duration: 500 }));
     brandTextOpacity.value = withDelay(150, withTiming(1, { duration: 500 }));
 
-    // 2. Stay on screen and then fade out entire container to finish
+    // 2. Exit transition: Cinematic Zoom-In & Fade Out
     const tFinish = setTimeout(() => {
+      exitScale.value = withTiming(2.8, { duration: 500 });
       containerOpacity.value = withTiming(0, { duration: 500 }, (finished) => {
         if (finished) {
           runOnJS(onFinish)();
         }
       });
-    }, 1600);
+    }, 1400);
 
     return () => {
       clearTimeout(tFinish);
@@ -44,7 +46,7 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
 
   // Animated stylesheets
   const animatedLogoStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: logoScale.value }],
+    transform: [{ scale: logoScale.value * exitScale.value }],
   }));
 
   const animatedBrandTextStyle = useAnimatedStyle(() => ({
@@ -62,9 +64,13 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
       {/* Center Brand Logo centerpiece */}
       <Animated.View style={[styles.logoCenterpiece, animatedLogoStyle]}>
         <View style={styles.brandRow}>
-          <View style={styles.logoDot} />
+          <Image 
+            source={require("../../../../assets/ambit_logo.png")} 
+            style={styles.logoImage} 
+            resizeMode="contain" 
+          />
           <Animated.View style={animatedBrandTextStyle}>
-            <Text style={styles.brandText}>Ambit</Text>
+            <Text style={styles.brandText}>mbit</Text>
           </Animated.View>
         </View>
       </Animated.View>
@@ -87,19 +93,17 @@ const styles = StyleSheet.create({
   brandRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 4,
   },
-  logoDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#C3E2C4",
+  logoImage: {
+    width: 48,
+    height: 48,
   },
   brandText: {
-    fontSize: 34,
+    fontSize: 42,
     fontWeight: "900",
-    color: "#11111E",
+    color: "#1C1B1F",
     fontFamily: "ManropeBold",
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
 });
