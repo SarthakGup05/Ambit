@@ -1,6 +1,6 @@
 import "./env.js"; // Initialize env first
 import { db } from "./db/index.js";
-import { societies, user, notices, visitors } from "./models/schema.js";
+import { societies, user, notices, visitors, complaints } from "./models/schema.js";
 import { auth } from "./auth.js";
 import { eq, sql } from "drizzle-orm";
 
@@ -151,6 +151,58 @@ async function seed() {
           status: "denied",
           approvedBy: adminUser.id,
         }
+      ]);
+
+      // 5. Seed Helpdesk Complaints
+      console.log("🛠️ Seeding initial helpdesk complaints...");
+      await db.delete(complaints).where(eq(complaints.societyId, society.id));
+      await db.insert(complaints).values([
+        {
+          societyId: society.id,
+          residentId: adminUser.id,
+          title: "Elevator B making loud screeching noise",
+          description: "The passenger lift in Tower B vibrates heavily and makes a loud noise when stopping on the 4th floor.",
+          category: "elevator",
+          priority: "high",
+          status: "in_progress",
+          comments: [
+            {
+              id: "cm1",
+              author: "Admin Office",
+              role: "admin",
+              text: "Otis Elevator service engineer notified. Technician visiting today at 4 PM.",
+              createdAt: new Date(Date.now() - 43200000).toISOString(),
+            },
+          ],
+        },
+        {
+          societyId: society.id,
+          residentId: adminUser.id,
+          title: "Water leakage near main lobby entrance",
+          description: "Drip from overhead AC line near lobby entrance gate creating slippery floor.",
+          category: "plumbing",
+          priority: "urgent",
+          status: "open",
+          comments: [],
+        },
+        {
+          societyId: society.id,
+          residentId: adminUser.id,
+          title: "Clubhouse gym treadmill #2 belt loose",
+          description: "The second treadmill belt slips when running above 8km/h.",
+          category: "maintenance",
+          priority: "low",
+          status: "resolved",
+          comments: [
+            {
+              id: "cm2",
+              author: "Society Maintenance",
+              role: "admin",
+              text: "Gym technician calibrated and tightened the belt.",
+              createdAt: new Date(Date.now() - 259200000).toISOString(),
+            },
+          ],
+        },
       ]);
     }
 
