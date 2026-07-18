@@ -1,22 +1,19 @@
 import { Router } from "express";
-import { authenticate, requireSociety, requireAdmin } from "../middleware/tenant.middleware.js";
-import { getPolls, createPoll, deletePoll } from "../controllers/polls.controller.js";
+import { authenticate, requireSociety } from "../middleware/tenant.middleware.js";
+import { getPolls, votePoll } from "../controllers/polls.controller.js";
 
 const router = Router();
 
-/**
- * 🗳️ Fetch all polls (Residents & Admins)
- */
-router.get("/", authenticate, requireSociety, getPolls);
+router.use(authenticate, requireSociety);
 
 /**
- * ✍️ Create a poll (Admin Only)
+ * 🗳️ Get all society polls
  */
-router.post("/", authenticate, requireSociety, requireAdmin, createPoll);
+router.get("/", getPolls);
 
 /**
- * 🗑️ Delete a poll (Admin Only)
+ * 🗳️ Cast a vote on a poll option
  */
-router.delete("/:id", authenticate, requireSociety, requireAdmin, deletePoll);
+router.post("/:id/vote", votePoll);
 
 export default router;

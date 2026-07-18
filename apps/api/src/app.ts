@@ -6,6 +6,11 @@ import onboardingRouter from "./routes/onboarding.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import noticesRouter from "./routes/notices.routes.js";
 import pollsRouter from "./routes/polls.routes.js";
+import complaintsRouter from "./routes/complaints.routes.js";
+import bookingsRouter from "./routes/bookings.routes.js";
+import visitorsRouter from "./routes/visitors.routes.js";
+import guestPassesRouter from "./routes/guest-passes.routes.js";
+import notificationsRouter from "./routes/notifications.routes.js";
 
 const app = express();
 
@@ -30,6 +35,21 @@ app.use("/api/notices", noticesRouter);
 
 // Polls Routes
 app.use("/api/polls", pollsRouter);
+
+// Complaints Routes
+app.use("/api/complaints", complaintsRouter);
+
+// Bookings Routes
+app.use("/api/bookings", bookingsRouter);
+
+// Visitors Routes
+app.use("/api/visitors", visitorsRouter);
+
+// Guest Passes Routes
+app.use("/api/guest-passes", guestPassesRouter);
+
+// Notifications Routes
+app.use("/api/notifications", notificationsRouter);
 
 // Health check route
 app.get("/health", (req: Request, res: Response) => {
