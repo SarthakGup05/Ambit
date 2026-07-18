@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Pressable, KeyboardAvoidingView, Platform, ScrollView, TextInput, ActivityIndicator, Text as RNText } from "react-native";
-import { Screen, Text, Button } from "@repo/ui";
+import { Screen, Text } from "@repo/ui";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/features/auth/hooks/useAuth";
-import { Lock, Mail, User, Eye, EyeOff, Apple } from "lucide-react-native";
+import { Lock, Mail, User, Eye, EyeOff, Apple, Key, ShieldCheck } from "lucide-react-native";
 import Svg, { Path } from "react-native-svg";
 import Animated, { FadeInUp } from "react-native-reanimated";
 
@@ -22,29 +22,38 @@ function GoogleIcon() {
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, isLoading, error: authError } = useAuth();
+  
+  const [signupMode, setSignupMode] = useState<"admin" | "invite">("admin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "resident">("resident");
+  const [inviteCode, setInviteCode] = useState("");
+  const [targetRole, setTargetRole] = useState<"resident" | "guard">("resident");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSignUp = async () => {
-    if (!name || !email || !password) {
-      setError("Please fill in all fields");
+    if (!name.trim() || !email.trim() || !password) {
+      setError("Please fill in all required fields");
       return;
     }
     if (password.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
     }
+    if (signupMode === "invite" && (!inviteCode || inviteCode.trim().length < 3)) {
+      setError("Please enter a valid Society Invite Code");
+      return;
+    }
     setError(null);
 
     try {
-      await register(name, email, password, role);
+      const assignedRole = signupMode === "admin" ? "admin" : targetRole;
+      const cleanInvite = signupMode === "invite" ? inviteCode.trim().toUpperCase() : undefined;
+      await register(name.trim(), email.trim(), password, assignedRole, cleanInvite);
       router.replace("/");
     } catch (err: any) {
-      // Error is handled in the useAuth hook
+      // Handled by hook
     }
   };
 
@@ -65,9 +74,42 @@ export default function RegisterScreen() {
             {/* Header section */}
             <View style={styles.headerSection}>
               <Animated.View entering={FadeInUp.duration(500)}>
-                <Text style={styles.title}>Register</Text>
+                <Text style={styles.title}>Get Started</Text>
               </Animated.View>
             </View>
+
+            {/* Mode Switcher Tabs */}
+            <View style={styles.modeTabRow}>
+              <Pressable
+                style={[styles.modeTab, signupMode === "admin" && styles.modeTabActive]}
+                onPress={() => {
+                  setSignupMode("admin");
+                  setError(null);
+                }}
+              >
+                <RNText style={[styles.modeTabText, signupMode === "admin" && styles.modeTabTextActive]}>
+                  Society Admin
+                </RNText>
+              </Pressable>
+              <Pressable
+                style={[styles.modeTab, signupMode === "invite" && styles.modeTabActive]}
+                onPress={() => {
+                  setSignupMode("invite");
+                  setError(null);
+                }}
+              >
+                <RNText style={[styles.modeTabText, signupMode === "invite" && styles.modeTabTextActive]}>
+                  Join via Invite Code
+                </RNText>
+              </Pressable>
+            </View>
+
+            {/* Mode Description Subtitle */}
+            <Text style={styles.modeDescription}>
+              {signupMode === "admin"
+                ? "Register as a Society Admin to create and manage your society boundary."
+                : "Enter the Invite Code provided by your society admin to join your community."}
+            </Text>
 
             {/* Error handling */}
             {activeError && (
@@ -78,6 +120,26 @@ export default function RegisterScreen() {
 
             {/* Form Fields */}
             <View style={styles.formContainer}>
+              {/* Invite Code Input (Only in Invite Mode) */}
+              {signupMode === "invite" && (
+                <Animated.View entering={FadeInUp.duration(300)}>
+                  <View style={[styles.inputWrapper, styles.inviteCodeWrapper]}>
+                    <Key size={20} color="#2E7D32" style={styles.inputIcon} />
+                    <TextInput
+                      placeholder="INVITE CODE (e.g. AMBIT123)"
+                      placeholderTextColor="#9CA3AF"
+                      autoCapitalize="characters"
+                      value={inviteCode}
+                      onChangeText={(text) => {
+                        setInviteCode(text.toUpperCase());
+                        setError(null);
+                      }}
+                      style={[styles.input, styles.inviteCodeInput]}
+                    />
+                  </View>
+                </Animated.View>
+              )}
+
               {/* Full Name Input */}
               <View style={styles.inputWrapper}>
                 <User size={20} color="#9CA3AF" style={styles.inputIcon} />
@@ -97,7 +159,7 @@ export default function RegisterScreen() {
               <View style={styles.inputWrapper}>
                 <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Email"
+                  placeholder="Email Address"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -114,7 +176,7 @@ export default function RegisterScreen() {
               <View style={styles.inputWrapper}>
                 <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Password"
+                  placeholder="Password (min. 6 characters)"
                   placeholderTextColor="#9CA3AF"
                   secureTextEntry={!showPassword}
                   value={password}
@@ -133,84 +195,60 @@ export default function RegisterScreen() {
                 </Pressable>
               </View>
 
-              {/* Role Selection */}
-              <View style={styles.roleSelectorContainer}>
-                <Text style={styles.roleLabel}>I want to sign up as:</Text>
-                <View style={styles.roleButtonsRow}>
-                  <Pressable
-                    style={[
-                      styles.roleButton,
-                      role === "resident" && styles.roleButtonActive,
-                    ]}
-                    onPress={() => setRole("resident")}
-                  >
-                    <RNText
+              {/* Role Selection (Only in Invite Mode) */}
+              {signupMode === "invite" && (
+                <Animated.View entering={FadeInUp.duration(300)} style={styles.roleSelectorContainer}>
+                  <Text style={styles.roleLabel}>I am joining as a:</Text>
+                  <View style={styles.roleButtonsRow}>
+                    <Pressable
                       style={[
-                        styles.roleButtonText,
-                        role === "resident" && styles.roleButtonTextActive,
+                        styles.roleButton,
+                        targetRole === "resident" && styles.roleButtonActive,
                       ]}
+                      onPress={() => setTargetRole("resident")}
                     >
-                      Resident
-                    </RNText>
-                  </Pressable>
-                  <Pressable
-                    style={[
-                      styles.roleButton,
-                      role === "admin" && styles.roleButtonActive,
-                    ]}
-                    onPress={() => setRole("admin")}
-                  >
-                    <RNText
+                      <RNText
+                        style={[
+                          styles.roleButtonText,
+                          targetRole === "resident" && styles.roleButtonTextActive,
+                        ]}
+                      >
+                        Resident
+                      </RNText>
+                    </Pressable>
+                    <Pressable
                       style={[
-                        styles.roleButtonText,
-                        role === "admin" && styles.roleButtonTextActive,
+                        styles.roleButton,
+                        targetRole === "guard" && styles.roleButtonActive,
                       ]}
+                      onPress={() => setTargetRole("guard")}
                     >
-                      Society Admin
-                    </RNText>
-                  </Pressable>
-                </View>
-              </View>
+                      <RNText
+                        style={[
+                          styles.roleButtonText,
+                          targetRole === "guard" && styles.roleButtonTextActive,
+                        ]}
+                      >
+                        Security Guard
+                      </RNText>
+                    </Pressable>
+                  </View>
+                </Animated.View>
+              )}
 
-              {/* Space helper */}
-              <View style={{ height: 8 }} />
-
-              {/* Forest Green Register Button */}
+              {/* Action Button */}
               <Pressable 
                 onPress={handleSignUp}
                 disabled={isLoading}
-                className="w-full h-[52px] rounded-[26px] bg-[#11111E] active:bg-[#2E2E3A] justify-center items-center mt-2"
+                style={styles.submitBtn}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <RNText className="text-white font-bold text-[15px]">Register</RNText>
+                  <RNText style={styles.submitBtnText}>
+                    {signupMode === "admin" ? "Create Admin Account" : "Join Society"}
+                  </RNText>
                 )}
-              </Pressable>
-            </View>
-
-            {/* "or" Divider */}
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Buttons */}
-            <View style={styles.socialGroup}>
-              <Pressable style={styles.socialBtn} onPress={() => {}}>
-                <GoogleIcon />
-                <Text style={styles.socialBtnText}>Continue with Google</Text>
-              </Pressable>
-
-              <Pressable style={styles.appleBtn} onPress={() => {}}>
-                <Apple size={18} color="#FFFFFF" style={styles.socialIcon} />
-                <Text style={styles.appleBtnText}>Continue with Apple</Text>
-              </Pressable>
-
-              <Pressable style={styles.socialBtn} onPress={() => router.replace("/")}>
-                <User size={18} color="#11111E" style={styles.socialIcon} />
-                <Text style={styles.socialBtnText}>Continue As Guest</Text>
               </Pressable>
             </View>
 
@@ -244,7 +282,7 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
   },
   headerSection: {
-    marginBottom: 36,
+    marginBottom: 20,
     alignItems: "center",
   },
   title: {
@@ -252,6 +290,41 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#11111E",
     fontFamily: "ManropeBold",
+  },
+  modeTabRow: {
+    flexDirection: "row",
+    backgroundColor: "#F4F4F5",
+    borderRadius: 24,
+    padding: 4,
+    marginBottom: 12,
+  },
+  modeTab: {
+    flex: 1,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modeTabActive: {
+    backgroundColor: "#11111E",
+  },
+  modeTabText: {
+    fontSize: 13,
+    fontFamily: "InterSemiBold",
+    fontWeight: "600",
+    color: "#71717A",
+  },
+  modeTabTextActive: {
+    color: "#FFFFFF",
+  },
+  modeDescription: {
+    fontSize: 12.5,
+    fontFamily: "Inter",
+    color: "#71717A",
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 20,
+    paddingHorizontal: 8,
   },
   errorBox: {
     backgroundColor: "rgba(239, 68, 68, 0.08)",
@@ -269,7 +342,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: "100%",
-    gap: 16,
+    gap: 14,
   },
   inputWrapper: {
     flexDirection: "row",
@@ -281,6 +354,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#FFFFFF",
   },
+  inviteCodeWrapper: {
+    borderColor: "#2E7D32",
+    backgroundColor: "rgba(46, 125, 50, 0.04)",
+  },
   inputIcon: {
     marginRight: 12,
   },
@@ -291,14 +368,71 @@ const styles = StyleSheet.create({
     color: "#11111E",
     fontFamily: "Inter",
   },
+  inviteCodeInput: {
+    fontFamily: "InterBold",
+    fontWeight: "bold",
+    letterSpacing: 1.5,
+    color: "#2E7D32",
+  },
   eyeBtn: {
     padding: 4,
+  },
+  roleSelectorContainer: {
+    marginVertical: 4,
+    gap: 8,
+  },
+  roleLabel: {
+    fontSize: 13,
+    color: "#5E5D6A",
+    fontFamily: "InterSemiBold",
+  },
+  roleButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  roleButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#E4E4E7",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  roleButtonActive: {
+    backgroundColor: "#2E7D32",
+    borderColor: "#2E7D32",
+  },
+  roleButtonText: {
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: "#5E5D6A",
+    fontFamily: "InterSemiBold",
+  },
+  roleButtonTextActive: {
+    color: "#FFFFFF",
+  },
+  submitBtn: {
+    width: "100%",
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#11111E",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  submitBtnText: {
+    color: "#FFFFFF",
+    fontFamily: "InterBold",
+    fontWeight: "bold",
+    fontSize: 15,
   },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 24,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
@@ -364,60 +498,5 @@ const styles = StyleSheet.create({
     color: "#2E7D32",
     fontFamily: "InterBold",
     fontWeight: "bold",
-  },
-  loginBtn: {
-    width: "100%",
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#11111E",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  loginBtnPressed: {
-    backgroundColor: "#2E2E3A",
-  },
-  loginBtnText: {
-    fontSize: 15,
-    fontFamily: "InterBold",
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  roleSelectorContainer: {
-    marginVertical: 4,
-    gap: 8,
-  },
-  roleLabel: {
-    fontSize: 14,
-    color: "#5E5D6A",
-    fontFamily: "InterSemiBold",
-    marginBottom: 4,
-  },
-  roleButtonsRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  roleButton: {
-    flex: 1,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#E4E4E7",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  roleButtonActive: {
-    backgroundColor: "#11111E",
-    borderColor: "#11111E",
-  },
-  roleButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#5E5D6A",
-    fontFamily: "InterSemiBold",
-  },
-  roleButtonTextActive: {
-    color: "#FFFFFF",
   },
 });

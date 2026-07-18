@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Pressable, Clipboard, Platform, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, Pressable, Clipboard, Platform, Alert, ScrollView, Share } from 'react-native';
 import { Screen, Text, SettingsSkeleton } from '@repo/ui';
 import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Building2, ClipboardCopy, Calendar, MapPin, KeyRound } from 'lucide-react-native';
+import { ArrowLeft, Building2, ClipboardCopy, Calendar, MapPin, KeyRound, Share2 } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { api } from '@/lib/axios';
@@ -62,6 +62,20 @@ export default function SocietySettingsScreen() {
     }
   };
 
+  const handleShareCode = async () => {
+    triggerHaptic();
+    if (society?.inviteCode) {
+      try {
+        await Share.share({
+          message: `Join ${society.name} on Ambit! Use our Society Invite Code: ${society.inviteCode} during registration.`,
+          title: `Join ${society.name}`,
+        });
+      } catch (error) {
+        console.warn('Failed to share invite code:', error);
+      }
+    }
+  };
+
   const handleBack = () => {
     triggerHaptic();
     router.back();
@@ -114,9 +128,14 @@ export default function SocietySettingsScreen() {
                     title="Invite Code"
                     subtitle={society.inviteCode}
                     rightElement={
-                      <Pressable style={styles.copyBtn} onPress={handleCopyCode}>
-                        <ClipboardCopy size={16} color="#4A5568" strokeWidth={2} />
-                      </Pressable>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <Pressable style={styles.copyBtn} onPress={handleCopyCode}>
+                          <ClipboardCopy size={16} color="#4A5568" strokeWidth={2} />
+                        </Pressable>
+                        <Pressable style={styles.copyBtn} onPress={handleShareCode}>
+                          <Share2 size={16} color="#2E7D32" strokeWidth={2} />
+                        </Pressable>
+                      </View>
                     }
                   />
                   <AppListItem
@@ -135,7 +154,7 @@ export default function SocietySettingsScreen() {
                 </AppSectionCard>
 
                 <Text style={styles.helperText}>
-                  Share the invite code above with residents so they can join this society and assign their flats automatically.
+                  Share the invite code above with residents and security guards so they can join this society automatically during registration.
                 </Text>
 
               </Animated.View>

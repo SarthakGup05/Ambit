@@ -131,25 +131,8 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
-            {/* "or" Divider */}
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Buttons */}
-            <View style={styles.socialGroup}>
-              <Pressable style={styles.socialBtn} onPress={() => {}}>
-                <GoogleIcon />
-                <Text style={styles.socialBtnText}>Continue with Google</Text>
-              </Pressable>
-
-              <Pressable style={styles.appleBtn} onPress={() => {}}>
-                <Apple size={18} color="#FFFFFF" style={styles.socialIcon} />
-                <Text style={styles.appleBtnText}>Continue with Apple</Text>
-              </Pressable>
-
+            {/* Guest Action */}
+            <View style={[styles.socialGroup, { marginTop: 16 }]}>
               <Pressable style={styles.socialBtn} onPress={() => router.replace("/")}>
                 <User size={18} color="#11111E" style={styles.socialIcon} />
                 <Text style={styles.socialBtnText}>Continue As Guest</Text>

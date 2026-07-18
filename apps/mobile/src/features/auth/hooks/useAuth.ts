@@ -1,9 +1,11 @@
 import { useState, useCallback } from "react";
+import { useRouter } from "expo-router";
 import { useAuthStore, type UserSession } from "../../../store/auth.store";
 import { authClient } from "../../../lib/auth-client";
 import { storage } from "../../../lib/storage";
 
 export function useAuth() {
+  const router = useRouter();
   const { token, user, setAuth, clearAuth } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,13 @@ export function useAuth() {
     }
   }, [setAuth]);
 
-  const register = useCallback(async (name: string, email: string, password: string, role: "admin" | "resident") => {
+  const register = useCallback(async (
+    name: string, 
+    email: string, 
+    password: string, 
+    role: "admin" | "resident" | "guard",
+    inviteCode?: string
+  ) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -61,7 +69,8 @@ export function useAuth() {
         password,
         name,
         role,
-      });
+        ...(inviteCode ? { inviteCode: inviteCode.trim().toUpperCase() } : {}),
+      } as any);
 
       if (response.error) {
         throw new Error(response.error.message || "Failed to sign up");
@@ -110,8 +119,10 @@ export function useAuth() {
       await storage.remove("auth_user");
       clearAuth();
       setIsLoading(false);
+      // Navigate cleanly back to login screen
+      router.replace("/(auth)/login");
     }
-  }, [clearAuth]);
+  }, [clearAuth, router]);
 
   const initializeAuth = useCallback(async () => {
     try {
