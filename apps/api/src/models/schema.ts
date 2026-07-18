@@ -175,7 +175,15 @@ export const complaints = pgTable("complaints", {
     .default("open")
     .notNull(),
   category: text("category").notNull(),
+  priority: text("priority")
+    .$type<"low" | "medium" | "high" | "urgent">()
+    .default("medium")
+    .notNull(),
+  comments: jsonb("comments")
+    .$type<{ id: string; author: string; role: string; text: string; createdAt: string }[]>()
+    .default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // 12. Amenities (Reserveable Resources)
@@ -208,5 +216,20 @@ export const bookings = pgTable("bookings", {
     .$type<"pending" | "confirmed" | "cancelled">()
     .default("pending")
     .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// 14. Notifications (Resident Alerts)
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  societyId: uuid("society_id")
+    .notNull()
+    .references(() => societies.id),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

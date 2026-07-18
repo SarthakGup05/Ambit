@@ -8,6 +8,20 @@
       "when": 1784119738235,
       "tag": "0000_tan_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784368304841,
+      "tag": "0001_ambiguous_victor_mancha",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784371834208,
+      "tag": "0002_massive_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }
