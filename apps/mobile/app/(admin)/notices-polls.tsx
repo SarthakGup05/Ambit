@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, Pressable, Platform, Modal, Alert, KeyboardAvoidingView, RefreshControl } from 'react-native';
 import { Screen, Text, CardSkeleton } from '@repo/ui';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Megaphone, Plus, X, Calendar, AlertTriangle, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Megaphone, Plus, X, AlertTriangle, Trash2 } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { api } from '@/lib/axios';
 import { CreateNoticeForm, CreatePollForm } from '@/components/CreateBulletinForm';
 import { ScreenBackground } from '@/components/common';
+import { uiStyles, type } from '@/theme';
 
 interface NoticeRecord {
   id: string;
@@ -29,8 +30,6 @@ interface PollRecord {
   totalVotes: number;
 }
 
-const CATEGORIES = ['Maintenance', 'Society', 'Events', 'Security'];
-
 export default function NoticesPollsScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'notices' | 'polls'>('notices');
@@ -48,7 +47,7 @@ export default function NoticesPollsScreen() {
   const triggerHaptic = () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (e) {
+    } catch {
       // ignore
     }
   };
@@ -96,7 +95,7 @@ export default function NoticesPollsScreen() {
             id: '1',
             question: 'Should we upgrade the Clubhouse Gym equipment?',
             options: ['Yes, fully support', 'Only repair existing', 'No, not needed'],
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(), // 2 days left
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(),
             createdAt: new Date().toISOString(),
             votes: { 'Yes, fully support': 12, 'Only repair existing': 4, 'No, not needed': 2 },
             totalVotes: 18,
@@ -105,7 +104,7 @@ export default function NoticesPollsScreen() {
             id: '2',
             question: 'Change visitor gate restriction timings to 10 PM?',
             options: ['Restrict at 10 PM', 'Keep at 11 PM', 'No restrictions'],
-            expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // expired
+            expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
             createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
             votes: { 'Restrict at 10 PM': 6, 'Keep at 11 PM': 14, 'No restrictions': 1 },
             totalVotes: 21,
@@ -144,12 +143,11 @@ export default function NoticesPollsScreen() {
     setModalVisible(false);
   };
 
-  // Delete Bulletin (Notice / Poll)
-  const handleDeleteItem = (id: string, type: 'notice' | 'poll', titleOrQuestion: string) => {
+  const handleDeleteItem = (id: string, typeName: 'notice' | 'poll', titleOrQuestion: string) => {
     triggerHaptic();
     Alert.alert(
       "Confirm Deletion",
-      `Are you sure you want to permanently delete this ${type === 'notice' ? 'notice' : 'poll'}? \n\n"${titleOrQuestion}"`,
+      `Are you sure you want to permanently delete this ${typeName === 'notice' ? 'notice' : 'poll'}? \n\n"${titleOrQuestion}"`,
       [
         { text: "Cancel", style: "cancel" },
         { 
@@ -158,10 +156,10 @@ export default function NoticesPollsScreen() {
           onPress: async () => {
             triggerHaptic();
             try {
-              const url = type === 'notice' ? `/api/notices/${id}` : `/api/polls/${id}`;
+              const url = typeName === 'notice' ? `/api/notices/${id}` : `/api/polls/${id}`;
               const response = await api.delete(url);
               if (response.status === 200) {
-                Alert.alert("Deleted", `${type === 'notice' ? 'Notice' : 'Poll'} removed successfully.`);
+                Alert.alert("Deleted", `${typeName === 'notice' ? 'Notice' : 'Poll'} removed successfully.`);
                 loadData();
               }
             } catch (err: any) {
@@ -222,7 +220,6 @@ export default function NoticesPollsScreen() {
   const renderPollItem = ({ item, index }: { item: PollRecord; index: number }) => {
     const isExpired = new Date(item.expiresAt) < new Date();
     
-    // Sort options to see who has the max votes for winning indicator
     let maxVotes = -1;
     let winningOption = '';
     Object.entries(item.votes).forEach(([opt, vCount]) => {
@@ -265,7 +262,6 @@ export default function NoticesPollsScreen() {
 
         <Text style={styles.pollQuestion}>{item.question}</Text>
 
-        {/* Live Vote Progress Bars */}
         <View style={styles.votesContainer}>
           {item.options.map((opt) => {
             const vCount = item.votes[opt] || 0;
@@ -295,82 +291,86 @@ export default function NoticesPollsScreen() {
     <View style={StyleSheet.absoluteFillObject}>
       <ScreenBackground />
       <Screen className="flex-1 bg-transparent" scrollable={false}>
-        {/* Header */}
-        <View style={styles.navHeader}>
-          <Pressable style={styles.backBtn} onPress={handleBack}>
-            <ArrowLeft size={18} color="#4A5568" />
-          </Pressable>
-          <Text style={styles.navTitle}>Bulletins & Cockpit</Text>
-          <View style={{ width: 36 }} />
-        </View>
-
-        {/* Tab switch header */}
-        <View style={styles.tabContainer}>
-          <Pressable
-            style={[styles.tabBtn, activeTab === 'notices' && styles.tabBtnActive]}
-            onPress={() => handleTabChange('notices')}
-          >
-            <Text style={[styles.tabBtnText, activeTab === 'notices' && styles.tabBtnTextActive]}>
-              Notices
+        <View style={[uiStyles.scroll, { paddingTop: Platform.OS === 'ios' ? 50 : 20, flex: 1 }]}>
+          {/* Header */}
+          <View style={uiStyles.header}>
+            <Pressable style={uiStyles.iconBtn} onPress={handleBack} hitSlop={12}>
+              <ArrowLeft size={22} color="#11111E" strokeWidth={2.2} />
+            </Pressable>
+            <Text variant="h3" weight="bold" style={type.navTitle}>
+              Bulletins & Cockpit
             </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tabBtn, activeTab === 'polls' && styles.tabBtnActive]}
-            onPress={() => handleTabChange('polls')}
-          >
-            <Text style={[styles.tabBtnText, activeTab === 'polls' && styles.tabBtnTextActive]}>
-              Polls
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Action row summary */}
-        <View style={styles.summaryBar}>
-          <View>
-            <Text style={styles.summaryLabel}>
-              {activeTab === 'notices' ? 'Broadcast board' : 'Community Voting'}
-            </Text>
-            <Text style={styles.summaryCount}>
-              {activeTab === 'notices' ? `${notices.length} Active` : `${polls.length} Live`}
-            </Text>
+            <View style={{ width: 46 }} />
           </View>
-          <Pressable style={styles.addBtn} onPress={handleOpenModal}>
-            <Plus size={16} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 6 }} />
-            <Text style={styles.addBtnText}>
-              {activeTab === 'notices' ? 'New Notice' : 'New Poll'}
-            </Text>
-          </Pressable>
-        </View>
 
-        {/* Bulletins lists with skeleton */}
-        {isLoading ? (
-          <View style={{ paddingHorizontal: 20, paddingTop: 4 }}>
-            <CardSkeleton count={2} />
+          {/* Tab switch header */}
+          <View style={styles.tabContainer}>
+            <Pressable
+              style={[styles.tabBtn, activeTab === 'notices' && styles.tabBtnActive]}
+              onPress={() => handleTabChange('notices')}
+            >
+              <Text style={[styles.tabBtnText, activeTab === 'notices' && styles.tabBtnTextActive]}>
+                Notices
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.tabBtn, activeTab === 'polls' && styles.tabBtnActive]}
+              onPress={() => handleTabChange('polls')}
+            >
+              <Text style={[styles.tabBtnText, activeTab === 'polls' && styles.tabBtnTextActive]}>
+                Polls
+              </Text>
+            </Pressable>
           </View>
-        ) : (
-          <FlatList
-            data={activeTab === 'notices' ? (notices as any[]) : (polls as any[])}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item, index }) => 
-              activeTab === 'notices' 
-                ? renderNoticeItem({ item: item as NoticeRecord, index })
-                : renderPollItem({ item: item as PollRecord, index })
-            }
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Megaphone size={40} color="#A3A1A8" strokeWidth={1.5} />
-                <Text style={styles.emptyText}>
-                  {activeTab === 'notices' ? 'No notices broadcasted yet' : 'No polls published yet'}
-                </Text>
-              </View>
-            }
-          />
-        )}
+
+          {/* Action row summary */}
+          <View style={styles.summaryBar}>
+            <View>
+              <Text style={uiStyles.sectionLabel}>
+                {activeTab === 'notices' ? 'Broadcast board' : 'Community Voting'}
+              </Text>
+              <Text style={styles.summaryCount}>
+                {activeTab === 'notices' ? `${notices.length} Active` : `${polls.length} Live`}
+              </Text>
+            </View>
+            <Pressable style={styles.addBtn} onPress={handleOpenModal}>
+              <Plus size={16} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 6 }} />
+              <Text style={styles.addBtnText}>
+                {activeTab === 'notices' ? 'New Notice' : 'New Poll'}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Bulletins lists */}
+          {isLoading ? (
+            <View style={{ paddingTop: 4 }}>
+              <CardSkeleton count={2} />
+            </View>
+          ) : (
+            <FlatList
+              data={activeTab === 'notices' ? (notices as any[]) : (polls as any[])}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item, index }) => 
+                activeTab === 'notices' 
+                  ? renderNoticeItem({ item: item as NoticeRecord, index })
+                  : renderPollItem({ item: item as PollRecord, index })
+              }
+              contentContainerStyle={{ paddingBottom: 120 }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />
+              }
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  <Megaphone size={40} color="#A3A1A8" strokeWidth={1.5} />
+                  <Text style={styles.emptyText}>
+                    {activeTab === 'notices' ? 'No notices broadcasted yet' : 'No polls published yet'}
+                  </Text>
+                </View>
+              }
+            />
+          )}
+        </View>
 
         {/* Add Modal Form */}
         <Modal
@@ -437,39 +437,15 @@ export default function NoticesPollsScreen() {
 }
 
 const styles = StyleSheet.create({
-  navHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    paddingBottom: 8,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0, 0, 0, 0.045)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navTitle: {
-    fontSize: 16.5,
-    fontFamily: 'ManropeBold',
-    fontWeight: 'bold',
-    color: '#1C1B1F',
-  },
   tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 12,
+    marginBottom: 16,
     gap: 12,
   },
   tabBtn: {
     flex: 1,
-    height: 38,
-    borderRadius: 12,
+    height: 40,
+    borderRadius: 14,
     backgroundColor: 'rgba(0, 0, 0, 0.035)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -494,15 +470,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
     marginBottom: 16,
-  },
-  summaryLabel: {
-    fontSize: 11,
-    fontFamily: 'InterBold',
-    color: '#8E8D94',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
   },
   summaryCount: {
     fontSize: 18,
@@ -514,7 +482,7 @@ const styles = StyleSheet.create({
   addBtn: {
     backgroundColor: '#4A5568',
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -530,28 +498,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    paddingBottom: 100,
-  },
   noticeCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.65)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
-    borderRadius: 24,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 28,
     padding: 18,
     marginBottom: 16,
     shadowColor: '#71717A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 3,
   },
   noticeHeader: {
     flexDirection: 'row',
@@ -767,108 +725,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.04)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  modalForm: {
-    gap: 14,
-  },
-  inputWrap: {
-    marginBottom: 4,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  addOptionLabel: {
-    fontSize: 12,
-    fontFamily: 'InterBold',
-    color: '#2E7D32',
-  },
-  optionInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: -4,
-  },
-  removeOptionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(193, 88, 75, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  selectLabel: {
-    fontSize: 12,
-    fontFamily: 'InterBold',
-    color: '#5E5D6A',
-    marginBottom: 8,
-  },
-  catGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  catButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.035)',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  catButtonActive: {
-    backgroundColor: 'rgba(74, 85, 104, 0.08)',
-    borderColor: '#4A5568',
-  },
-  catBtnText: {
-    fontSize: 12,
-    fontFamily: 'InterMedium',
-    color: '#6B6873',
-  },
-  catBtnTextActive: {
-    fontFamily: 'InterSemiBold',
-    color: '#4A5568',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  toggleTextCol: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  toggleLabel: {
-    fontSize: 13.5,
-    fontFamily: 'InterSemiBold',
-    color: '#1C1B1F',
-  },
-  toggleDesc: {
-    fontSize: 11,
-    fontFamily: 'Inter',
-    color: '#8E8D94',
-    marginTop: 2,
-  },
-  errorBox: {
-    backgroundColor: 'rgba(193, 88, 75, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(193, 88, 75, 0.2)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-  },
-  errorText: {
-    color: '#C1584B',
-    fontSize: 13,
-    fontFamily: 'InterMedium',
-    textAlign: 'center',
   },
 });
