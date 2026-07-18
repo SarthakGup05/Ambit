@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Platform, ScrollView, Pressable, Switch, Alert } from 'react-native';
+import { View, StyleSheet, Platform, ScrollView, Pressable, Switch, Alert } from 'react-native';
 import { Screen, Text } from '@repo/ui';
+import { AppSectionCard, AppListItem } from '@/components/common';
+import { uiStyles } from '@/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  User,
   Bell,
   Mail,
   Moon,
-  ChevronRight,
   HelpCircle,
   FileText,
-  LogOut,
   Building,
   UserCheck,
 } from 'lucide-react-native';
-import Animated, { ZoomIn, FadeIn, FadeInUp } from 'react-native-reanimated';
+import Animated, { ZoomIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../../../src/features/auth/hooks/useAuth';
 
@@ -30,25 +29,9 @@ export default function ResidentProfileTab() {
   const triggerHaptic = () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (e) {
+    } catch {
       // ignore
     }
-  };
-
-  const handleTogglePush = (val: boolean) => {
-    triggerHaptic();
-    setPushEnabled(val);
-  };
-
-  const handleToggleEmail = (val: boolean) => {
-    triggerHaptic();
-    setEmailEnabled(val);
-  };
-
-  const handleToggleDark = (val: boolean) => {
-    triggerHaptic();
-    setDarkMode(val);
-    Alert.alert("Preferences", "Dark Mode will be available in the next release.");
   };
 
   const handleLogoutPress = () => {
@@ -89,8 +72,9 @@ export default function ResidentProfileTab() {
 
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={uiStyles.scroll}
           showsVerticalScrollIndicator={false}
+          style={{ paddingTop: 40, paddingBottom: 140 }}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -132,87 +116,110 @@ export default function ResidentProfileTab() {
             </View>
           </Animated.View>
 
-          {/* Settings Sections */}
+          {/* Settings Sections — Reusable AppSectionCard & AppListItem */}
           <View style={styles.settingsContainer}>
-            
             {/* Section 1: Account & Society */}
-            <Text style={styles.sectionLabel}>Account & Society</Text>
-            <View style={styles.sectionCard}>
-              <SettingItem
+            <AppSectionCard label="Account & Society">
+              <AppListItem
                 Icon={Building}
                 title="Switch Society"
-                description="Connect to another resident profile"
+                subtitle="Connect to another resident profile"
                 valueText={user?.flatNumber || "No Flat"}
                 onPress={() => {
                   Alert.alert("Society Management", "Multiple society switcher is coming soon.");
                 }}
               />
-              <View style={styles.divider} />
-              <SettingItem
+              <AppListItem
                 Icon={UserCheck}
                 title="Family Members"
-                description="Manage co-resident access keys"
+                subtitle="Manage co-resident access keys"
                 valueText="0 Active"
                 onPress={() => {
                   Alert.alert("Family Access", "Manage co-residents & tenant invites coming soon.");
                 }}
+                isLast={true}
               />
-            </View>
+            </AppSectionCard>
 
             {/* Section 2: Preferences */}
-            <Text style={styles.sectionLabel}>Preferences</Text>
-            <View style={styles.sectionCard}>
-              <SettingToggleItem
+            <AppSectionCard label="Preferences">
+              <AppListItem
                 Icon={Bell}
                 title="Push Notifications"
-                description="Visitor entry, notices, and alerts"
-                value={pushEnabled}
-                onValueChange={setPushEnabled}
+                subtitle="Visitor entry, notices, and alerts"
+                rightElement={
+                  <Switch
+                    value={pushEnabled}
+                    onValueChange={(val) => {
+                      triggerHaptic();
+                      setPushEnabled(val);
+                    }}
+                    trackColor={{ false: '#E4E4E7', true: '#7A9B76' }}
+                    thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : pushEnabled ? '#FAF8F5' : '#FFFFFF'}
+                    ios_backgroundColor="#E4E4E7"
+                  />
+                }
               />
-              <View style={styles.divider} />
-              <SettingToggleItem
+              <AppListItem
                 Icon={Mail}
                 title="Email Updates"
-                description="Receive monthly maintenance bills"
-                value={emailEnabled}
-                onValueChange={setEmailEnabled}
+                subtitle="Receive monthly maintenance bills"
+                rightElement={
+                  <Switch
+                    value={emailEnabled}
+                    onValueChange={(val) => {
+                      triggerHaptic();
+                      setEmailEnabled(val);
+                    }}
+                    trackColor={{ false: '#E4E4E7', true: '#7A9B76' }}
+                    thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : emailEnabled ? '#FAF8F5' : '#FFFFFF'}
+                    ios_backgroundColor="#E4E4E7"
+                  />
+                }
               />
-              <View style={styles.divider} />
-              <SettingToggleItem
+              <AppListItem
                 Icon={Moon}
                 title="Dark Mode"
-                description="Sleek dark themed interface"
-                value={darkMode}
-                onValueChange={(val) => {
-                  setDarkMode(val);
-                  Alert.alert("Preferences", "Dark Mode will be available in the next release.");
-                }}
+                subtitle="Sleek dark themed interface"
+                isLast={true}
+                rightElement={
+                  <Switch
+                    value={darkMode}
+                    onValueChange={(val) => {
+                      triggerHaptic();
+                      setDarkMode(val);
+                      Alert.alert("Preferences", "Dark Mode will be available in the next release.");
+                    }}
+                    trackColor={{ false: '#E4E4E7', true: '#7A9B76' }}
+                    thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : darkMode ? '#FAF8F5' : '#FFFFFF'}
+                    ios_backgroundColor="#E4E4E7"
+                  />
+                }
               />
-            </View>
+            </AppSectionCard>
 
             {/* Section 3: Support & Info */}
-            <Text style={styles.sectionLabel}>Support & Info</Text>
-            <View style={styles.sectionCard}>
-              <SettingItem
+            <AppSectionCard label="Support & Info">
+              <AppListItem
                 Icon={HelpCircle}
                 title="Help Center"
-                description="FAQ, guides, and support chat"
+                subtitle="FAQ, guides, and support chat"
                 valueText="FAQs"
                 onPress={() => {
                   Alert.alert("Support", "Support center is under construction.");
                 }}
               />
-              <View style={styles.divider} />
-              <SettingItem
+              <AppListItem
                 Icon={FileText}
                 title="Terms & Privacy"
-                description="User agreement and data practices"
+                subtitle="User agreement and data practices"
                 valueText="Read"
                 onPress={() => {
                   Alert.alert("Legal Docs", "Terms and Privacy docs are hosted on ambit.com.");
                 }}
+                isLast={true}
               />
-            </View>
+            </AppSectionCard>
 
             {/* Logout button */}
             <Pressable
@@ -235,103 +242,7 @@ export default function ResidentProfileTab() {
   );
 }
 
-// ─── Shared Setting List Item Component ──────────────────────────────────────
-interface SettingItemProps {
-  Icon: any;
-  title: string;
-  description: string;
-  valueText?: string;
-  onPress: () => void;
-}
-
-function SettingItem({ Icon, title, description, valueText, onPress }: SettingItemProps) {
-  const triggerHaptic = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const handlePress = () => {
-    triggerHaptic();
-    onPress();
-  };
-
-  return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [
-        pressed && styles.settingRowPressed,
-      ]}
-    >
-      <View style={styles.settingRow}>
-        <View style={styles.settingIconWrapper}>
-          <Icon size={15} color="#4A5568" strokeWidth={2.2} />
-        </View>
-        <View style={styles.settingTextContainer}>
-          <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[14.5px] leading-5">{title}</Text>
-          <Text variant="caption" className="text-[#8E8D94] text-[11.5px] mt-0.5">{description}</Text>
-        </View>
-        {valueText && (
-          <Text style={styles.valueText}>{valueText}</Text>
-        )}
-        <ChevronRight size={14} color="#A3A1A8" strokeWidth={2.5} style={{ marginLeft: 6 }} />
-      </View>
-    </Pressable>
-  );
-}
-
-// ─── Shared Setting Toggle Component ─────────────────────────────────────────
-interface SettingToggleProps {
-  Icon: any;
-  title: string;
-  description: string;
-  value: boolean;
-  onValueChange: (val: boolean) => void;
-}
-
-function SettingToggleItem({ Icon, title, description, value, onValueChange }: SettingToggleProps) {
-  const triggerHaptic = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const handleToggle = (val: boolean) => {
-    triggerHaptic();
-    onValueChange(val);
-  };
-
-  return (
-    <View style={styles.settingRow}>
-      <View style={styles.settingIconWrapper}>
-        <Icon size={15} color="#4A5568" strokeWidth={2.2} />
-      </View>
-      <View style={styles.settingTextContainer}>
-        <Text variant="body" weight="semibold" className="text-[#1C1B1F] text-[14.5px] leading-5">{title}</Text>
-        <Text variant="caption" className="text-[#8E8D94] text-[11.5px] mt-0.5">{description}</Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={handleToggle}
-        trackColor={{ false: '#E4E4E7', true: '#7A9B76' }}
-        thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : value ? '#FAF8F5' : '#FFFFFF'}
-        ios_backgroundColor="#E4E4E7"
-      />
-    </View>
-  );
-}
-
-// ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 140,
-  },
   header: {
     marginBottom: 20,
   },
@@ -372,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
     shadowColor: '#71717A',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
@@ -442,62 +353,7 @@ const styles = StyleSheet.create({
     color: '#6B6873',
   },
   settingsContainer: {
-    gap: 16,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: 'InterBold',
-    color: '#8E8D94',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginLeft: 4,
-    marginBottom: -8,
-  },
-  sectionCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
-    borderRadius: 24,
-    overflow: 'hidden',
-    shadowColor: '#71717A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minHeight: 56,
-  },
-  settingRowPressed: {
-    backgroundColor: 'rgba(0, 0, 0, 0.045)',
-  },
-  settingIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(74, 85, 104, 0.07)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  settingTextContainer: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  valueText: {
-    fontSize: 13,
-    fontFamily: 'InterMedium',
-    color: '#8E8D94',
-    marginRight: 2,
-  },
-  divider: {
-    height: 0.5,
-    backgroundColor: 'rgba(28, 27, 31, 0.08)',
-    marginLeft: 56,
+    gap: 4,
   },
   logoutButton: {
     flexDirection: 'row',
@@ -512,10 +368,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 3,
-  },
-  logoutButtonPressed: {
-    backgroundColor: '#A8493D',
-    transform: [{ scale: 0.98 }],
   },
   logoutButtonText: {
     fontSize: 14,
