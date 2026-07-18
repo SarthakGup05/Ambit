@@ -29,7 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Booking } from '@/features/bookings/api';
-import { NotificationDrawer } from './NotificationDrawer';
+import { useNotificationStore } from '@/store/notification.store';
 import { OverviewService, Notice } from '@/services/OverviewService';
 import { NotificationService, NotificationItem } from '@/services/NotificationService';
 
@@ -75,7 +75,7 @@ const QUICK_ACTIONS = [
     title: 'Community Polls',
     subtitle: 'Vote on society decisions',
     Icon: CheckCircle,
-    route: '/(resident)/polls' as const,
+    route: '/(resident)/(tabs)/polls' as const,
   },
 ];
 
@@ -108,7 +108,7 @@ export function Overview() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notificationsList, setNotificationsList] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [notifDrawerVisible, setNotifDrawerVisible] = useState(false);
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
   const greeting = getGreeting();
 
   const loadDashboard = useCallback(async () => {
@@ -122,13 +122,16 @@ export function Overview() {
       setNotices(noticesList);
       setBookings(bookingsList);
       setNotificationsList(notifsList);
+
+      const count = (notifsList || []).filter((n) => !n.isRead).length;
+      setUnreadCount(count);
     } catch (err) {
       console.warn('Failed to load overview metrics:', err);
     } finally {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [setUnreadCount]);
 
   useEffect(() => {
     loadDashboard();
@@ -139,38 +142,12 @@ export function Overview() {
     loadDashboard();
   };
 
-  const openDrawer = () => {
+  const navigateToNotifications = () => {
     triggerHaptic();
-    setNotifDrawerVisible(true);
+    router.push('/(resident)/(tabs)/notifications');
   };
 
-  const closeDrawer = () => {
-    triggerHaptic();
-    setNotifDrawerVisible(false);
-  };
-
-  const handleMarkAllRead = async () => {
-    triggerHaptic();
-    try {
-      await NotificationService.markAllAsRead();
-      setNotificationsList(notificationsList.map((n) => ({ ...n, isRead: true })));
-    } catch {
-      Alert.alert('Error', 'Could not clear notifications');
-    }
-  };
-
-  const handleMarkSingleRead = async (id: string) => {
-    triggerHaptic();
-    try {
-      await NotificationService.markAsRead(id);
-      setNotificationsList(notificationsList.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-    } catch {
-      // Local fallback
-      setNotificationsList(notificationsList.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-    }
-  };
-
-  const unreadCount = notificationsList.filter((n) => !n.isRead).length;
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
@@ -196,7 +173,7 @@ export function Overview() {
                 Welcome back!
               </Text>
             </View>
-            <Pressable onPress={openDrawer} style={uiStyles.iconBtn} hitSlop={12}>
+            <Pressable onPress={navigateToNotifications} style={uiStyles.iconBtn} hitSlop={12}>
               <Bell size={24} color="#11111E" strokeWidth={2.2} />
               {unreadCount > 0 && <View style={uiStyles.notifDot} />}
             </Pressable>
@@ -317,17 +294,7 @@ export function Overview() {
         </ScrollView>
       </Screen>
 
-      {/* Notification Right-Side Drawer */}
-      <NotificationDrawer
-        visible={notifDrawerVisible}
-        onClose={closeDrawer}
-        notificationsList={notificationsList}
-        unreadCount={unreadCount}
-        handleMarkAllRead={handleMarkAllRead}
-        handleMarkSingleRead={handleMarkSingleRead}
-        insetsTop={insets.top}
-        insetsBottom={insets.bottom}
-      />
+      {/* Standalone screen used instead of drawer */}
     </View>
   );
 }
