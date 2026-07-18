@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Platform, Alert, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Platform, Alert, RefreshControl, InteractionManager } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
 import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
 import { uiStyles, type } from '@/theme';
@@ -60,7 +60,10 @@ export default function VisitorApprovalsScreen() {
   }, []);
 
   useEffect(() => {
-    loadData();
+    const task = InteractionManager.runAfterInteractions(() => {
+      loadData();
+    });
+    return () => task.cancel();
   }, [loadData]);
 
   const onRefresh = useCallback(() => {
@@ -88,16 +91,20 @@ export default function VisitorApprovalsScreen() {
         <View style={[uiStyles.scroll, { paddingTop: Platform.OS === 'ios' ? 50 : 20, flex: 1 }]}>
           {/* Header */}
           <View style={uiStyles.header}>
-            <Pressable
-              style={uiStyles.iconBtn}
-              onPress={() => {
-                triggerHaptic();
-                router.back();
-              }}
-              hitSlop={12}
-            >
-              <ArrowLeft size={22} color="#11111E" strokeWidth={2.2} />
-            </Pressable>
+            {router.canGoBack() ? (
+              <Pressable
+                style={uiStyles.iconBtn}
+                onPress={() => {
+                  triggerHaptic();
+                  router.back();
+                }}
+                hitSlop={12}
+              >
+                <ArrowLeft size={22} color="#11111E" strokeWidth={2.2} />
+              </Pressable>
+            ) : (
+              <View style={{ width: 46 }} />
+            )}
             <Text variant="h3" weight="bold" style={type.navTitle}>
               Visitor Approvals
             </Text>

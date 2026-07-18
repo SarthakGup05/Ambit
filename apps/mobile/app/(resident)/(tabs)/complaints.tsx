@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   RefreshControl,
+  InteractionManager,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
 import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
@@ -143,7 +144,10 @@ export default function ComplaintsTab() {
   }, [activeFilter]);
 
   useEffect(() => {
-    loadData();
+    const task = InteractionManager.runAfterInteractions(() => {
+      loadData();
+    });
+    return () => task.cancel();
   }, [loadData]);
 
   const onRefresh = useCallback(() => {
