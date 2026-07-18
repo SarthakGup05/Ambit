@@ -1,147 +1,132 @@
 import { type Request, type Response, type NextFunction } from "express";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { polls, pollVotes } from "../models/schema.js";
 
 /**
- * 🗳️ Get Polls with live vote aggregations
+ * 🗳️ Get all society polls (Seeds default polls if empty)
  */
 export async function getPolls(req: Request, res: Response, next: NextFunction) {
   try {
-    if (!req.societyId) {
-      return res.status(400).json({ error: "Society association required" });
+    if (!req.user || !req.societyId) {
+      return res.status(401).json({ error: "Authentication required" });
     }
 
-    const list = await db
+    let list = await db
       .select()
       .from(polls)
       .where(eq(polls.societyId, req.societyId))
       .orderBy(desc(polls.createdAt));
 
-    // Aggregate votes for each poll
-    const pollsWithVotes = await Promise.all(
-      list.map(async (poll) => {
-        const votesResult = await db
-          .select({
-            option: pollVotes.option,
-            count: sql<number>`count(*)::int`,
-          })
+    // Seed default community polls if empty
+    if (list.length === 0) {
+      const defaults = [
+        {
+          question: "Should we implement security EV patrol vehicles in the basement?",
+          options: ["Yes, immediately", "No, keep guards on foot", "Neutral / Unsure"],
+          expiresAt: new Date(Date.now() + 86400000 * 7), // 7 days
+        },
+        {
+          question: "Select the preferred timing for society clubhouse tennis court lights shutdown:",
+          options: ["9:00 PM", "10:00 PM", "11:00 PM"],
+          expiresAt: new Date(Date.now() + 86400000 * 3), // 3 days
+        },
+      ];
+
+      await db.insert(polls).values(
+        defaults.map((p) => ({
+          societyId: req.societyId!,
+          ...p,
+        }))
+      );
+
+      list = await db
+        .select()
+        .from(polls)
+        .where(eq(polls.societyId, req.societyId))
+        .orderBy(desc(polls.createdAt));
+    }
+
+    // Map each poll and append user vote status & option tallies
+    const formattedPolls = await Promise.all(
+      list.map(async (p) => {
+        // 1. Fetch user's cast vote if any
+        const [userVote] = await db
+          .select({ option: pollVotes.option })
           .from(pollVotes)
-          .where(eq(pollVotes.pollId, poll.id))
-          .groupBy(pollVotes.option);
+          .where(and(eq(pollVotes.pollId, p.id), eq(pollVotes.userId, req.user!.id)))
+          .limit(1);
 
-        const votesMap: Record<string, number> = {};
-        poll.options.forEach((opt) => {
-          votesMap[opt] = 0;
-        });
-        votesResult.forEach((v) => {
-          votesMap[v.option] = v.count;
-        });
-
-        const totalVotes = votesResult.reduce((sum, v) => sum + v.count, 0);
+        // 2. Fetch total tally count for options
+        const voteTallies = await Promise.all(
+          p.options.map(async (option) => {
+            const [tally] = await db
+              .select({ val: count() })
+              .from(pollVotes)
+              .where(and(eq(pollVotes.pollId, p.id), eq(pollVotes.option, option)));
+            return { option, votes: tally?.val || 0 };
+          })
+        );
 
         return {
-          id: poll.id,
-          question: poll.question,
-          options: poll.options,
-          expiresAt: poll.expiresAt,
-          createdAt: poll.createdAt,
-          votes: votesMap,
-          totalVotes,
+          id: p.id,
+          question: p.question,
+          options: p.options,
+          expiresAt: p.expiresAt,
+          createdAt: p.createdAt,
+          userVotedOption: userVote?.option || null,
+          results: voteTallies,
+          totalVotes: voteTallies.reduce((sum, current) => sum + current.votes, 0),
         };
       })
     );
 
-    return res.status(200).json({ polls: pollsWithVotes });
+    return res.status(200).json({ polls: formattedPolls });
   } catch (error) {
     next(error);
   }
 }
 
 /**
- * ✍️ Create a Poll (Admin Only)
+ * 🗳️ Cast a vote on a poll option
  */
-export async function createPoll(req: Request, res: Response, next: NextFunction) {
+export async function votePoll(req: Request, res: Response, next: NextFunction) {
   try {
-    const { question, options, expiresInDays } = req.body;
-
-    if (!question || !options || !Array.isArray(options) || options.length < 2) {
-      return res.status(400).json({ 
-        error: "Question and at least 2 options are required" 
-      });
+    if (!req.user || !req.societyId) {
+      return res.status(401).json({ error: "Authentication required" });
     }
 
-    if (!req.societyId) {
-      return res.status(400).json({ error: "Society association required" });
+    const { id } = req.params;
+    const { option } = req.body;
+
+    if (!id || !option) {
+      return res.status(400).json({ error: "Poll ID and chosen option are required" });
     }
 
-    const days = parseInt(expiresInDays) || 3; // Default 3 days
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
+    // Verify user has not already voted on this poll
+    const [existingVote] = await db
+      .select()
+      .from(pollVotes)
+      .where(and(eq(pollVotes.pollId, id), eq(pollVotes.userId, req.user.id)))
+      .limit(1);
 
-    const [newPoll] = await db
-      .insert(polls)
+    if (existingVote) {
+      return res.status(409).json({ error: "You have already voted on this community poll" });
+    }
+
+    // Cast vote
+    const [newVote] = await db
+      .insert(pollVotes)
       .values({
-        societyId: req.societyId,
-        question: question.trim(),
-        options: options.map(opt => opt.trim()).filter(opt => opt.length > 0),
-        expiresAt,
+        pollId: id,
+        userId: req.user.id,
+        option,
       })
       .returning();
 
-    if (!newPoll) {
-      return res.status(500).json({ error: "Failed to create poll" });
-    }
-
     return res.status(201).json({
-      message: "Poll published successfully",
-      poll: {
-        ...newPoll,
-        votes: newPoll.options.reduce((map, opt) => ({ ...map, [opt]: 0 }), {}),
-        totalVotes: 0,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * 🗑️ Delete a Poll (Admin Only)
- */
-export async function deletePoll(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({ error: "Poll ID is required" });
-    }
-
-    if (!req.societyId) {
-      return res.status(400).json({ error: "Society association required" });
-    }
-
-    // 1. Delete associated votes to maintain foreign key integrity
-    await db.delete(pollVotes).where(eq(pollVotes.pollId, id));
-
-    // 2. Delete the poll
-    const [deletedPoll] = await db
-      .delete(polls)
-      .where(
-        and(
-          eq(polls.id, id),
-          eq(polls.societyId, req.societyId)
-        )
-      )
-      .returning();
-
-    if (!deletedPoll) {
-      return res.status(404).json({ error: "Poll not found or unauthorized" });
-    }
-
-    return res.status(200).json({
-      message: "Poll deleted successfully",
-      poll: deletedPoll,
+      message: "Your vote has been cast successfully",
+      vote: newVote,
     });
   } catch (error) {
     next(error);
