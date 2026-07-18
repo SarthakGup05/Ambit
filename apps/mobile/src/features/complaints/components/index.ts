@@ -1,2 +1,2 @@
-// Custom UI components for this feature
-export {};
+export * from './CreateComplaintModal';
+export * from './ComplaintDetailModal';
