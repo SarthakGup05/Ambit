@@ -20,16 +20,29 @@ export async function getPolls(req: Request, res: Response, next: NextFunction) 
 
     // Seed default community polls if empty
     if (list.length === 0) {
+      const now = new Date();
+      const addTime = (days: number, hours: number) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() + days);
+        d.setHours(d.getHours() + hours);
+        return d;
+      };
+
       const defaults = [
         {
-          question: "Should we implement security EV patrol vehicles in the basement?",
-          options: ["Yes, immediately", "No, keep guards on foot", "Neutral / Unsure"],
-          expiresAt: new Date(Date.now() + 86400000 * 7), // 7 days
+          question: "Should we upgrade the children's play area?",
+          options: ["Yes, I support this", "No, not needed right now", "I'm not sure"],
+          expiresAt: addTime(2, 14),
         },
         {
-          question: "Select the preferred timing for society clubhouse tennis court lights shutdown:",
-          options: ["9:00 PM", "10:00 PM", "11:00 PM"],
-          expiresAt: new Date(Date.now() + 86400000 * 3), // 3 days
+          question: "Should we implement visitor parking charges?",
+          options: ["Yes", "No"],
+          expiresAt: addTime(5, 8),
+        },
+        {
+          question: "Should we install RO plants in the society?",
+          options: ["Yes", "No"],
+          expiresAt: addTime(7, 12),
         },
       ];
 
@@ -88,7 +101,7 @@ export async function getPolls(req: Request, res: Response, next: NextFunction) 
 }
 
 /**
- * 🗳️ Cast a vote on a poll option
+ * 🗳️ Cast or update a vote on a poll option
  */
 export async function votePoll(req: Request, res: Response, next: NextFunction) {
   try {
@@ -103,7 +116,7 @@ export async function votePoll(req: Request, res: Response, next: NextFunction) 
       return res.status(400).json({ error: "Poll ID and chosen option are required" });
     }
 
-    // Verify user has not already voted on this poll
+    // Check if user has already voted on this poll
     const [existingVote] = await db
       .select()
       .from(pollVotes)
@@ -111,10 +124,20 @@ export async function votePoll(req: Request, res: Response, next: NextFunction) 
       .limit(1);
 
     if (existingVote) {
-      return res.status(409).json({ error: "You have already voted on this community poll" });
+      // Update existing vote (Change My Vote support)
+      const [updatedVote] = await db
+        .update(pollVotes)
+        .set({ option })
+        .where(and(eq(pollVotes.pollId, id), eq(pollVotes.userId, req.user.id)))
+        .returning();
+
+      return res.status(200).json({
+        message: "Your vote has been updated successfully",
+        vote: updatedVote,
+      });
     }
 
-    // Cast vote
+    // Cast new vote
     const [newVote] = await db
       .insert(pollVotes)
       .values({
@@ -127,6 +150,85 @@ export async function votePoll(req: Request, res: Response, next: NextFunction) 
     return res.status(201).json({
       message: "Your vote has been cast successfully",
       vote: newVote,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 🗳️ Create a new poll (Admin)
+ */
+export async function createPoll(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user || !req.societyId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { question, options, expiresInDays } = req.body;
+
+    if (!question || typeof question !== "string" || question.trim().length === 0) {
+      return res.status(400).json({ error: "Poll question is required" });
+    }
+
+    if (!Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ error: "At least 2 options are required" });
+    }
+
+    const days = typeof expiresInDays === "number" && expiresInDays > 0 ? expiresInDays : 7;
+    const expiresAt = new Date(Date.now() + days * 86400000);
+
+    const [newPoll] = await db
+      .insert(polls)
+      .values({
+        societyId: req.societyId,
+        question: question.trim(),
+        options: options.map((opt: string) => String(opt).trim()).filter(Boolean),
+        expiresAt,
+      })
+      .returning();
+
+    return res.status(201).json({
+      message: "Poll created successfully",
+      poll: newPoll,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 🗳️ Delete a poll (Admin)
+ */
+export async function deletePoll(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user || !req.societyId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "Poll ID is required" });
+    }
+
+    // Delete associated votes first
+    await db
+      .delete(pollVotes)
+      .where(eq(pollVotes.pollId, id));
+
+    // Delete poll
+    const [deleted] = await db
+      .delete(polls)
+      .where(and(eq(polls.id, id), eq(polls.societyId, req.societyId)))
+      .returning();
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Poll not found" });
+    }
+
+    return res.status(200).json({
+      message: "Poll deleted successfully",
+      poll: deleted,
     });
   } catch (error) {
     next(error);
