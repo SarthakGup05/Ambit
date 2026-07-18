@@ -62,7 +62,22 @@ export default function NoticesPollsScreen() {
       } else {
         const response = await api.get('/api/polls');
         if (response.data && response.data.polls) {
-          setPolls(response.data.polls);
+          const normalizedPolls = response.data.polls.map((p: any) => {
+            const votesMap: Record<string, number> = {};
+            if (p.votes) {
+              Object.assign(votesMap, p.votes);
+            } else if (Array.isArray(p.results)) {
+              p.results.forEach((r: any) => {
+                votesMap[r.option] = r.votes || 0;
+              });
+            }
+            return {
+              ...p,
+              votes: votesMap,
+              totalVotes: typeof p.totalVotes === 'number' ? p.totalVotes : 0,
+            };
+          });
+          setPolls(normalizedPolls);
         }
       }
     } catch (err: any) {
@@ -220,14 +235,19 @@ export default function NoticesPollsScreen() {
   const renderPollItem = ({ item, index }: { item: PollRecord; index: number }) => {
     const isExpired = new Date(item.expiresAt) < new Date();
     
+    // Safely retrieve votes map
+    const votesObj: Record<string, number> = item.votes || {};
     let maxVotes = -1;
     let winningOption = '';
-    Object.entries(item.votes).forEach(([opt, vCount]) => {
+    Object.entries(votesObj).forEach(([opt, vCount]) => {
       if (vCount > maxVotes && vCount > 0) {
         maxVotes = vCount;
         winningOption = opt;
       }
     });
+
+    const optionsList = Array.isArray(item.options) ? item.options : [];
+    const totalVotesCount = item.totalVotes || 0;
 
     return (
       <Animated.View entering={FadeInDown.duration(350).delay(index * 40)} style={styles.noticeCard}>
@@ -250,7 +270,7 @@ export default function NoticesPollsScreen() {
           </View>
           
           <View style={styles.headerRight}>
-            <Text style={styles.noticeDate}>{item.totalVotes} votes</Text>
+            <Text style={styles.noticeDate}>{totalVotesCount} votes</Text>
             <Pressable 
               style={({ pressed }) => [styles.deleteBtn, pressed && styles.deleteBtnPressed]}
               onPress={() => handleDeleteItem(item.id, 'poll', item.question)}
@@ -263,9 +283,9 @@ export default function NoticesPollsScreen() {
         <Text style={styles.pollQuestion}>{item.question}</Text>
 
         <View style={styles.votesContainer}>
-          {item.options.map((opt) => {
-            const vCount = item.votes[opt] || 0;
-            const pct = item.totalVotes > 0 ? Math.round((vCount / item.totalVotes) * 100) : 0;
+          {optionsList.map((opt) => {
+            const vCount = votesObj[opt] || 0;
+            const pct = totalVotesCount > 0 ? Math.round((vCount / totalVotesCount) * 100) : 0;
             const isWinner = opt === winningOption;
 
             return (
