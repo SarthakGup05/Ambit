@@ -1,6 +1,8 @@
-# Ambit Product Requirements Checklist (PRD)
+# Ambit — Hackathon MVP Product Requirements (Target: July 25)
 
-This is the living PRD checklist for the Ambit Multi-Tenant SaaS platform.
+**Hackathon MVP Progress: 85.7% Complete (30/35 features implemented)**
+
+This is the living Hackathon MVP checklist for the Ambit Multi-Tenant SaaS platform.
 
 ## 🏢 Multi-Tenancy & SaaS Architecture
 - [x] Database isolation using `society_id` on all non-global tables:
@@ -13,58 +15,40 @@ This is the living PRD checklist for the Ambit Multi-Tenant SaaS platform.
   - [x] `amenities` scoped to a society
   - [x] `bookings` scoped to a society
 - [x] Express middleware to resolve `society_id` from auth context and scope all database queries automatically.
-- [ ] Multi-tenant Onboarding Flow:
-  - [x] **Admin Onboarding**: Admin registers → creates a society (name, address, flat/tower structure) → generates unique invite code.
-  - [x] **Resident Onboarding**: Resident registers → enters/scans society invite code → joins society → selects flat number.
-  - [ ] **Guard Onboarding**: Guard invited by admin → assigned to gate.
-- [ ] Society Plans & Upgrades:
-  - [ ] Billing screen at society level (Starter Free vs. Pro Paid).
-  - [ ] Razorpay integration to process plan upgrade.
+- [x] Multi-tenant Onboarding Flow:
+  - [x] **Admin Onboarding**: Admin registers → creates a society → generates unique invite code.
+  - [x] **Resident Onboarding**: Resident registers → enters society invite code → joins society.
+  - [x] **Guard Onboarding**: Guard invited by admin → assigned to gate via invite code.
 
-## 👥 User Roles & Features
+## 🏆 Hackathon Core MVP Demos (July 19 – July 25)
 
-### 1. Resident Dashboard & Features
-- [ ] Real-time visitor approval (Push/Socket alert prompts to approve/deny).
-- [ ] QR Guest Pass generation (signed token, custom boarding pass UI).
-- [ ] Cab/Delivery/Service staff pre-approvals.
-- [ ] Historical visitor entry log.
-- [ ] Bulletins: view notices and vote in society polls.
-- [ ] Helpdesk: raise, track, and close maintenance/security complaints.
-- [ ] Amenity Bookings: reserve society resources (clubhouse, pool, court) with capacity checks.
-- [ ] Maintenance Dues: pay monthly bills via Razorpay gateway.
+### 1. 🎟️ Signature Feature: QR Guest Boarding Pass
+- [x] Resident pre-approves guest → generates a cryptographically signed QR token.
+- [x] Custom Boarding Pass UI built with SVG (notches, dashed lines, perforated ticket style, brand logo in center).
+- [x] Native Share via WhatsApp / Copy Link without requiring guest app download (shares high-contrast JPG).
+- [x] Guard App Camera QR Scanner + `/guest-passes/verify` API with instant green "ACCESS GRANTED" UI.
 
-### 2. Security Guard Dashboard & Features
-- [ ] Log visitor entry requests (search flat, enter visitor name, phone, purpose).
-- [ ] Resident & Flat directory search.
-- [ ] QR Pass scanner: scan resident guest pass, hit `/guest-passes/verify`, validate token, auto-log entry.
-- [ ] Verify manual visitor approvals and mark entries/exits.
-- [ ] Real-time guard visitor entry log.
-- [ ] Service provider check-in lookup.
+### 2. 💳 RevenueCat In-App Purchase Paywall (Sandbox Demo)
+- [ ] Integrated `react-native-purchases` SDK with Sandbox / Test Key configuration.
+- [ ] Glassmorphic Admin Paywall screen (`Pro Society Plan - ₹1,499/mo`).
+- [ ] 1-Tap Purchase Demo → Triggers confetti animation & upgrades society to **"PRO GOLD"** badge.
 
-### 3. Society Admin Dashboard & Features
-- [x] Central dashboard analytics (active visitors, billing status, amenity use).
-- [ ] Flat and Tower configuration editor.
-- [x] Manage members (approve residents, configure guards).
-- [x] Manage bulletins (post notices, create polls).
-- [ ] Manage amenities (define booking capacities, hours).
-- [x] Review society-wide visitor histories.
+### 3. 🚨 Instant Emergency SOS Guard Alarm
+- [ ] Resident App floating **SOS Panic Button**.
+- [ ] Guard App full-screen red flashing alert with siren sound & location.
 
-## 🎟️ Signature Feature: QR Guest Boarding Pass
-- [ ] Resident pre-approves guest → generates a cryptographically signed, single-use token with short expiration.
-- [ ] Custom Boarding Pass UI built with SVG (notches, dashed lines, perforated ticket style).
-- [ ] Pass shareable via link or WhatsApp without requiring the guest to download the app.
-- [ ] Verification endpoint `/guest-passes/verify` validating token signatures, timestamps, and single-use flags.
+### 4. 👥 Resident & Admin Features
+- [x] Bulletins: view notices and vote in society polls (real-time votes, progress rings, vote overrides, suggest poll modal).
+- [x] Helpdesk: raise, track, and close maintenance/security complaints.
+- [x] Notifications: elevation cards, read/unread states, bold headings.
+- [x] Admin Member Management: approve residents & configure guards.
+- [x] Admin Bulletin & Poll Management: create and delete polls API endpoints.
+- [x] Society Admin Invite Code Display: Clipboard copy & native Share sheet.
 
-## 💳 Payment Gateway (Razorpay)
-- [ ] Frontend Razorpay integration for:
-  - [ ] Resident monthly maintenance dues.
-  - [ ] B2B Admin Plan upgrades (Starter to Pro).
-- [ ] Server-side signature validation of payment responses prior to updating transaction states.
-
-## ⚡ Non-Functional & Quality Requirements
-- [ ] Push notifications: configure Expo push token registry.
-- [ ] Socket.io integration: establish instant event propagation for gate check-ins.
-- [x] Haptic feedback: integrate light impacts on approvals/successes.
-- [ ] Skeleton loaders on all async screens.
-- [ ] Empty state fallback screens.
-- [x] Version tagging and terms of service stubs.
+## ⚡ Performance & Quality Requirements
+- [x] 60FPS Smooth Transitions: deferred state hydration using `InteractionManager.runAfterInteractions`.
+- [x] Custom Skeleton Loaders on all async screens (notifications, polls, settings, complaints).
+- [x] Haptic feedback integration on button presses and actions.
+- [x] Brand Logo (`ambit_logo.png`) integration across splash, welcome screen, icons, and headers.
+- [x] Cinematic Splash Screen Zoom-In Exit transition.
+- [x] Removed social buttons from Login & Register for clean authentication flow.

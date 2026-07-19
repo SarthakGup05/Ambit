@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper } from '@/components/common';
 import { type, uiStyles } from '@/theme';
 import { useRouter } from 'expo-router';
 import {
@@ -173,9 +173,10 @@ export function Overview() {
                 Welcome back!
               </Text>
             </View>
-            <Pressable onPress={navigateToNotifications} style={uiStyles.iconBtn} hitSlop={12}>
-              <Bell size={24} color="#11111E" strokeWidth={2.2} />
-              {unreadCount > 0 && <View style={uiStyles.notifDot} />}
+            <Pressable onPress={navigateToNotifications} style={uiStyles.transparentIconBtn} hitSlop={12}>
+              <BadgeIconWrapper count={unreadCount} theme="blood_red">
+                <Bell size={22} color="#11111E" strokeWidth={2.2} />
+              </BadgeIconWrapper>
             </Pressable>
           </RAnimated.View>
 

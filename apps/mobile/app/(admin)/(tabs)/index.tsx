@@ -8,9 +8,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Screen, Text, GridSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper } from '@/components/common';
 import { type, uiStyles } from '@/theme';
 import { useRouter } from 'expo-router';
+import { useNotificationStore } from '@/store';
 import {
   Menu,
   Bell,
@@ -97,6 +98,7 @@ function triggerHaptic() {
 export default function AdminHomeTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { unreadCount } = useNotificationStore();
   const [refreshing, setRefreshing] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [stats, setStats] = React.useState<SocietyStats>({
@@ -162,9 +164,10 @@ export default function AdminHomeTab() {
             <Text variant="h3" weight="bold" style={type.navTitle}>
               Admin Dashboard
             </Text>
-            <Pressable onPress={triggerHaptic} style={uiStyles.iconBtn} hitSlop={12}>
-              <Bell size={24} color="#11111E" strokeWidth={2.2} />
-              <View style={uiStyles.notifDot} />
+            <Pressable onPress={triggerHaptic} style={uiStyles.transparentIconBtn} hitSlop={12}>
+              <BadgeIconWrapper count={unreadCount} theme="blood_red">
+                <Bell size={22} color="#11111E" strokeWidth={2.2} />
+              </BadgeIconWrapper>
             </Pressable>
           </Animated.View>
 
