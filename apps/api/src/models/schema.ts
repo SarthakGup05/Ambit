@@ -96,6 +96,8 @@ export const visitors = pgTable("visitors", {
     .default("pending")
     .notNull(),
   approvedBy: text("approved_by").references(() => user.id),
+  checkInTime: timestamp("check_in_time"),
+  checkOutTime: timestamp("check_out_time"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
