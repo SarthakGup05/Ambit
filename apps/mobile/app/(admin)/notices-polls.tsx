@@ -7,7 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { api } from '@/lib/axios';
 import { CreateNoticeForm, CreatePollForm } from '@/components/CreateBulletinForm';
-import { ScreenBackground } from '@/components/common';
+import { ScreenBackground, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 
 interface NoticeRecord {
@@ -381,12 +381,15 @@ export default function NoticesPollsScreen() {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />
               }
               ListEmptyComponent={
-                <View style={styles.emptyState}>
-                  <Megaphone size={40} color="#A3A1A8" strokeWidth={1.5} />
-                  <Text style={styles.emptyText}>
-                    {activeTab === 'notices' ? 'No notices broadcasted yet' : 'No polls published yet'}
-                  </Text>
-                </View>
+                <AppEmptyState
+                  icon={activeTab === 'notices' ? Megaphone : AlertTriangle}
+                  title={activeTab === 'notices' ? "No Notices Published" : "No Polls Published"}
+                  description={activeTab === 'notices' 
+                    ? "Broadcast announcements, emergency updates, or society news to residents here." 
+                    : "Create feedback questions or simple vote forms to gauge resident opinions."}
+                  actionLabel={activeTab === 'notices' ? "Publish Notice" : "Create Poll"}
+                  onAction={() => { triggerHaptic(); setModalVisible(true); }}
+                />
               }
             />
           )}

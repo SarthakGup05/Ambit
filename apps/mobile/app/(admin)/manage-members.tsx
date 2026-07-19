@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { CreateEditMemberForm } from '@/components/CreateEditMemberForm';
 import { useRouter } from 'expo-router';
@@ -194,10 +194,13 @@ export default function ManageMembersScreen() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />}
                 ListEmptyComponent={
-                  <View style={uiStyles.emptyState}>
-                    <User size={40} color="#A3A1A8" strokeWidth={1.5} />
-                    <Text style={uiStyles.emptyText}>No residents found</Text>
-                  </View>
+                  <AppEmptyState
+                    icon={User}
+                    title="No Residents Found"
+                    description={searchQuery.trim() ? `No residents match the query "${searchQuery}".` : "Add a resident to get started with the directory."}
+                    actionLabel={searchQuery.trim() ? undefined : "Add Resident"}
+                    onAction={searchQuery.trim() ? undefined : () => { triggerHaptic(); openAdd(); }}
+                  />
                 }
               />
             </AppSectionCard>

@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { useRouter } from 'expo-router';
 import {
@@ -344,10 +344,11 @@ export default function AdminComplaintsScreen() {
             >
               <AppSectionCard label="Grievance Triage Roster">
                 {filteredList.length === 0 ? (
-                  <View style={uiStyles.emptyState}>
-                    <MessageSquare size={40} color="#A3A1A8" strokeWidth={1.5} />
-                    <Text style={uiStyles.emptyText}>No tickets found in this status</Text>
-                  </View>
+                  <AppEmptyState
+                    icon={MessageSquare}
+                    title="No Tickets Found"
+                    description={`There are currently no resident tickets with status "${activeFilter}".`}
+                  />
                 ) : (
                   filteredList.map((item, idx) => {
                     const CategoryIcon = CATEGORY_ICONS[item.category] || HelpCircle;

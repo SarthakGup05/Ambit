@@ -6,13 +6,12 @@ import {
   Pressable,
   Platform,
   Modal,
-  Alert,
   KeyboardAvoidingView,
   RefreshControl,
   InteractionManager,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, useToast, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import {
   Plus,
@@ -33,12 +32,14 @@ import {
   ComplaintStatus,
   ComplaintCategory,
   CreateComplaintInput,
-  CreateComplaintModal,
+  RaiseTicketSheet,
   ComplaintDetailModal,
   fetchComplaints,
   createComplaintApi,
   addComplaintCommentApi,
 } from '@/features/complaints';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const CATEGORY_ICONS: Record<ComplaintCategory, any> = {
   plumbing: Wrench,
@@ -49,94 +50,103 @@ const CATEGORY_ICONS: Record<ComplaintCategory, any> = {
   other: HelpCircle,
 };
 
-const INITIAL_FALLBACK_COMPLAINTS: ComplaintItem[] = [
+const STATUS_META: Record<ComplaintStatus, { label: string; color: string }> = {
+  open:        { label: 'Open',        color: '#D97706' },
+  in_progress: { label: 'In Progress', color: '#2563EB' },
+  resolved:    { label: 'Resolved',    color: '#2E7D32' },
+  closed:      { label: 'Closed',      color: '#6B7280' },
+};
+
+const FALLBACK_COMPLAINTS: ComplaintItem[] = [
   {
     id: 'c1',
     title: 'Elevator B making loud screeching noise',
-    description: 'The passenger lift in Tower B vibrates heavily and makes a loud noise when stopping on the 4th floor.',
+    description: 'The lift in Tower B vibrates heavily and makes a loud noise when stopping on the 4th floor.',
     category: 'elevator',
     priority: 'high',
     status: 'in_progress',
     residentName: 'Sarthak Mehta',
     flatNumber: 'B-402',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 43200000).toISOString(),
+    createdAt: new Date(Date.now() - 86_400_000).toISOString(),
+    updatedAt: new Date(Date.now() - 43_200_000).toISOString(),
     comments: [
       {
         id: 'cm1',
         author: 'Admin Office',
         role: 'admin',
-        text: 'Otis Elevator service engineer notified. Technician visiting today at 4 PM.',
-        createdAt: new Date(Date.now() - 43200000).toISOString(),
+        text: 'Otis service engineer notified. Technician visiting today at 4 PM.',
+        createdAt: new Date(Date.now() - 43_200_000).toISOString(),
       },
     ],
   },
   {
     id: 'c2',
     title: 'Water leakage near main lobby entrance',
-    description: 'Drip from overhead AC line near lobby entrance gate creating slippery floor.',
+    description: 'Drip from overhead AC line near lobby gate creating slippery floor.',
     category: 'plumbing',
     priority: 'urgent',
     status: 'open',
     residentName: 'Sarthak Mehta',
     flatNumber: 'A-1203',
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    updatedAt: new Date(Date.now() - 172800000).toISOString(),
+    createdAt: new Date(Date.now() - 172_800_000).toISOString(),
+    updatedAt: new Date(Date.now() - 172_800_000).toISOString(),
     comments: [],
   },
   {
     id: 'c3',
     title: 'Clubhouse gym treadmill #2 belt loose',
-    description: 'The second treadmill belt slips when running above 8km/h.',
+    description: 'The second treadmill belt slips when running above 8 km/h.',
     category: 'maintenance',
     priority: 'low',
     status: 'resolved',
     residentName: 'Sarthak Mehta',
     flatNumber: 'A-1203',
-    createdAt: new Date(Date.now() - 604800000).toISOString(),
-    updatedAt: new Date(Date.now() - 259200000).toISOString(),
+    createdAt: new Date(Date.now() - 604_800_000).toISOString(),
+    updatedAt: new Date(Date.now() - 259_200_000).toISOString(),
     comments: [
       {
         id: 'cm2',
         author: 'Society Maintenance',
         role: 'admin',
         text: 'Gym technician calibrated and tightened the belt.',
-        createdAt: new Date(Date.now() - 259200000).toISOString(),
+        createdAt: new Date(Date.now() - 259_200_000).toISOString(),
       },
     ],
   },
 ];
 
-function triggerHaptic() {
-  try {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  } catch {
-    // ignore
-  }
+const FILTERS = [
+  { key: 'all'         , label: 'All'         },
+  { key: 'open'        , label: 'Open'        },
+  { key: 'in_progress' , label: 'In Progress' },
+  { key: 'resolved'    , label: 'Resolved'    },
+] as const;
+
+function haptic() {
+  try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
 }
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ComplaintsTab() {
   const insets = useSafeAreaInsets();
-  const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'all' | ComplaintStatus>('all');
-  const [refreshing, setRefreshing] = useState(false);
+  const toast   = useToast();
 
-  // Modals
-  const [createModalVisible, setCreateModalVisible] = useState(false);
-  const [selectedComplaint, setSelectedComplaint] = useState<ComplaintItem | null>(null);
+  const [complaints,     setComplaints]     = useState<ComplaintItem[]>([]);
+  const [isLoading,      setIsLoading]      = useState(true);
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [activeFilter,   setActiveFilter]   = useState<'all' | ComplaintStatus>('all');
+  const [sheetVisible,   setSheetVisible]   = useState(false);
+  const [selectedItem,   setSelectedItem]   = useState<ComplaintItem | null>(null);
+
+  // ── Data ──────────────────────────────────────────────────────────────────
 
   const loadData = useCallback(async () => {
     try {
       const data = await fetchComplaints(activeFilter);
-      if (data && data.length > 0) {
-        setComplaints(data);
-      } else {
-        setComplaints(INITIAL_FALLBACK_COMPLAINTS);
-      }
-    } catch (err: any) {
-      console.warn("Failed to fetch complaints from backend:", err.message || err);
-      setComplaints(INITIAL_FALLBACK_COMPLAINTS);
+      setComplaints(data?.length ? data : FALLBACK_COMPLAINTS);
+    } catch {
+      setComplaints(FALLBACK_COMPLAINTS);
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -144,9 +154,7 @@ export default function ComplaintsTab() {
   }, [activeFilter]);
 
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      loadData();
-    });
+    const task = InteractionManager.runAfterInteractions(loadData);
     return () => task.cancel();
   }, [loadData]);
 
@@ -155,179 +163,134 @@ export default function ComplaintsTab() {
     loadData();
   }, [loadData]);
 
-  const handleCreateComplaint = async (input: CreateComplaintInput) => {
-    triggerHaptic();
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleCreateComplaint = useCallback(async (input: CreateComplaintInput) => {
+    haptic();
     try {
       const created = await createComplaintApi(input);
-      if (created) {
-        setComplaints([created, ...complaints]);
-      } else {
-        const localNew: ComplaintItem = {
-          id: `c_${Date.now()}`,
-          ...input,
-          status: 'open',
-          residentName: 'Sarthak Mehta',
-          flatNumber: 'A-1203',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          comments: [],
-        };
-        setComplaints([localNew, ...complaints]);
-      }
-    } catch {
-      const localNew: ComplaintItem = {
+      const newItem: ComplaintItem = created ?? {
         id: `c_${Date.now()}`,
-        ...input,
         status: 'open',
         residentName: 'Sarthak Mehta',
-        flatNumber: 'A-1203',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         comments: [],
+        ...input,
       };
-      setComplaints([localNew, ...complaints]);
+      setComplaints((prev) => [newItem, ...prev]);
+      toast.success('TICKET RAISED', 'Your complaint has been submitted to society management.');
+    } catch {
+      const localItem: ComplaintItem = {
+        id: `c_${Date.now()}`,
+        status: 'open',
+        residentName: 'Sarthak Mehta',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        comments: [],
+        ...input,
+      };
+      setComplaints((prev) => [localItem, ...prev]);
+      toast.success('TICKET RAISED', 'Your complaint has been saved locally.');
     } finally {
-      setCreateModalVisible(false);
-      Alert.alert('Ticket Created', 'Your complaint ticket has been submitted to society management.');
+      setSheetVisible(false);
     }
-  };
+  }, [toast]);
 
-  const handleAddComment = async (complaintId: string, commentText: string) => {
+  const handleAddComment = useCallback(async (complaintId: string, commentText: string) => {
     try {
-      const updatedItem = await addComplaintCommentApi(complaintId, commentText);
-      if (updatedItem) {
-        setComplaints(complaints.map((c) => (c.id === complaintId ? updatedItem : c)));
-        if (selectedComplaint?.id === complaintId) {
-          setSelectedComplaint(updatedItem);
-        }
+      const updated = await addComplaintCommentApi(complaintId, commentText);
+      if (updated) {
+        setComplaints((prev) => prev.map((c) => (c.id === complaintId ? updated : c)));
+        if (selectedItem?.id === complaintId) setSelectedItem(updated);
         return;
       }
-    } catch {
-      // Fallback local update
-    }
+    } catch {}
 
-    const updated = complaints.map((c) => {
-      if (c.id === complaintId) {
-        const newCm = {
+    // local fallback
+    setComplaints((prev) =>
+      prev.map((c) => {
+        if (c.id !== complaintId) return c;
+        const newComment = {
           id: `cm_${Date.now()}`,
           author: 'Sarthak Mehta',
           role: 'resident' as const,
           text: commentText,
           createdAt: new Date().toISOString(),
         };
-        return {
-          ...c,
-          comments: [...(c.comments || []), newCm],
-        };
-      }
-      return c;
-    });
-    setComplaints(updated);
-    if (selectedComplaint?.id === complaintId) {
-      setSelectedComplaint(updated.find((c) => c.id === complaintId) || null);
-    }
-  };
+        const updated = { ...c, comments: [...(c.comments ?? []), newComment] };
+        if (selectedItem?.id === complaintId) setSelectedItem(updated);
+        return updated;
+      })
+    );
+  }, [selectedItem]);
 
-  const filteredList = complaints.filter((c) => {
-    if (activeFilter === 'all') return true;
-    return c.status === activeFilter;
-  });
+  // ── Derived ───────────────────────────────────────────────────────────────
 
-  const activeCount = complaints.filter((c) => c.status !== 'resolved' && c.status !== 'closed').length;
+  const filteredList = complaints.filter(
+    (c) => activeFilter === 'all' || c.status === activeFilter
+  );
+  const activeCount = complaints.filter(
+    (c) => c.status !== 'resolved' && c.status !== 'closed'
+  ).length;
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <View style={{ flex: 1 }}>
       <ScreenBackground />
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <ScrollView
-          contentContainerStyle={[
-            uiStyles.scroll,
-            { paddingTop: insets.top + 16, paddingBottom: 130 },
-          ]}
+          contentContainerStyle={[uiStyles.scroll, { paddingTop: insets.top + 16, paddingBottom: 130 }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E4D2B" />
           }
         >
           {/* Header */}
           <Animated.View entering={FadeIn.duration(300)} style={uiStyles.header}>
-            <View style={{ flex: 1, paddingRight: 12, gap: 2 }}>
-              <Text variant="h2" weight="bold" style={type.greeting}>
-                Help & Complaints
-              </Text>
-              <Text variant="body" style={type.greetingSub}>
-                Raise tickets & track society resolution
-              </Text>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="h2" weight="bold" style={type.greeting}>Help &amp; Complaints</Text>
+              <Text variant="body" style={type.greetingSub}>Raise tickets &amp; track society resolution</Text>
             </View>
-            <Pressable
-              onPress={() => {
-                triggerHaptic();
-                setCreateModalVisible(true);
-              }}
-              style={[uiStyles.iconBtn, { backgroundColor: '#2E7D32' }]}
-              hitSlop={12}
-            >
-              <Plus size={22} color="#FFFFFF" strokeWidth={2.4} />
-            </Pressable>
           </Animated.View>
 
-          {/* Summary Bar */}
+          {/* Summary bar */}
           <View style={uiStyles.summaryBar}>
             <View>
               <Text style={uiStyles.sectionLabel}>Active Tickets</Text>
-              <Text style={uiStyles.summaryCount}>
-                {activeCount} Pending Resolution
-              </Text>
+              <Text style={uiStyles.summaryCount}>{activeCount} Pending Resolution</Text>
             </View>
             <Pressable
-              style={[uiStyles.addBtn, { backgroundColor: '#2E7D32', shadowColor: '#2E7D32' }]}
-              onPress={() => {
-                triggerHaptic();
-                setCreateModalVisible(true);
-              }}
+              style={[uiStyles.addBtn, { backgroundColor: '#1E4D2B', shadowColor: '#1E4D2B' }]}
+              onPress={() => { haptic(); setSheetVisible(true); }}
             >
               <Plus size={16} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 4 }} />
               <Text style={uiStyles.addBtnText}>Raise Ticket</Text>
             </Pressable>
           </View>
 
-          {/* Filter Bar */}
-          <View style={styles.filterRow}>
-            {(
-              [
-                ['all', 'All'],
-                ['open', 'Open'],
-                ['in_progress', 'In Progress'],
-                ['resolved', 'Resolved'],
-              ] as const
-            ).map(([key, label]) => {
-              const isSelected = activeFilter === key;
+          {/* Filter bar */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.filterRow}
+          >
+            {FILTERS.map(({ key, label }) => {
+              const active = activeFilter === key;
               return (
                 <Pressable
                   key={key}
-                  onPress={() => {
-                    triggerHaptic();
-                    setActiveFilter(key);
-                  }}
-                  style={[
-                    styles.filterChip,
-                    isSelected && styles.filterChipActive,
-                  ]}
+                  onPress={() => { haptic(); setActiveFilter(key); }}
+                  style={[s.filterChip, active && s.filterChipActive]}
                 >
-                  <Text
-                    style={[
-                      styles.filterText,
-                      isSelected && styles.filterTextActive,
-                    ]}
-                  >
-                    {label}
-                  </Text>
+                  <Text style={[s.filterText, active && s.filterTextActive]}>{label}</Text>
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
 
-          {/* Complaint Ticket List */}
+          {/* List */}
           {isLoading ? (
             <View style={{ paddingTop: 8 }}>
               <ListSkeleton count={3} />
@@ -336,34 +299,26 @@ export default function ComplaintsTab() {
             <Animated.View entering={FadeInUp.duration(400).delay(100)}>
               <AppSectionCard label="Grievance Register">
                 {filteredList.length === 0 ? (
-                  <View style={uiStyles.emptyState}>
-                    <MessageSquare size={40} color="#A3A1A8" strokeWidth={1.5} />
-                    <Text style={uiStyles.emptyText}>No complaints found in this status</Text>
-                  </View>
+                  <AppEmptyState
+                    icon={MessageSquare}
+                    title="No Complaints Found"
+                    description={activeFilter === 'all'
+                      ? "Raise a ticket if you have any issues with maintenance, plumbing, electrical, or other society services."
+                      : `No complaints found with status "${activeFilter}".`
+                    }
+                    actionLabel={activeFilter === 'all' ? "Raise Complaint" : undefined}
+                    onAction={activeFilter === 'all' ? () => { haptic(); setSheetVisible(true); } : undefined}
+                  />
                 ) : (
                   filteredList.map((item, idx) => {
                     const CategoryIcon = CATEGORY_ICONS[item.category] || HelpCircle;
-                    const statusLabel =
-                      item.status === 'in_progress'
-                        ? 'In Progress'
-                        : item.status === 'open'
-                        ? 'Open'
-                        : 'Resolved';
-                    const statusColor =
-                      item.status === 'in_progress'
-                        ? '#2563EB'
-                        : item.status === 'open'
-                        ? '#D97706'
-                        : '#2E7D32';
-
+                    const { label: statusLabel, color: statusColor } = STATUS_META[item.status] ?? STATUS_META.open;
                     return (
                       <AppListItem
                         key={item.id}
                         Icon={CategoryIcon}
                         title={item.title}
-                        subtitle={`Flat ${item.flatNumber} · ${new Date(
-                          item.createdAt
-                        ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                        subtitle={`Flat ${item.flatNumber} · ${new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                         rightElement={
                           <View style={uiStyles.statusBadge}>
                             <Text style={[uiStyles.statusBadgeText, { color: statusColor }]}>
@@ -371,10 +326,7 @@ export default function ComplaintsTab() {
                             </Text>
                           </View>
                         }
-                        onPress={() => {
-                          triggerHaptic();
-                          setSelectedComplaint(item);
-                        }}
+                        onPress={() => { haptic(); setSelectedItem(item); }}
                         isLast={idx === filteredList.length - 1}
                       />
                     );
@@ -386,41 +338,36 @@ export default function ComplaintsTab() {
         </ScrollView>
       </Screen>
 
-      {/* Raise Ticket Modal */}
+      {/* ── Raise Ticket Modal ── */}
       <Modal
         animationType="slide"
         transparent
-        visible={createModalVisible}
-        onRequestClose={() => setCreateModalVisible(false)}
+        visible={sheetVisible}
+        onRequestClose={() => setSheetVisible(false)}
+        statusBarTranslucent
       >
-        <View style={uiStyles.modalOverlay}>
+        <View style={s.overlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSheetVisible(false)} />
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={uiStyles.modalContent}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={s.sheetWrapper}
           >
-            <View style={uiStyles.modalHeader}>
-              <Text style={uiStyles.modalTitle}>Raise Helpdesk Ticket</Text>
-              <Pressable
-                style={uiStyles.closeBtn}
-                onPress={() => setCreateModalVisible(false)}
-              >
-                <X size={18} color="#4A5568" />
-              </Pressable>
-            </View>
-            <CreateComplaintModal
+            <RaiseTicketSheet
               onSubmit={handleCreateComplaint}
-              onClose={() => setCreateModalVisible(false)}
+              onClose={() => setSheetVisible(false)}
+              bottomInset={insets.bottom}
             />
           </KeyboardAvoidingView>
         </View>
       </Modal>
 
-      {/* Ticket Detail Modal */}
+      {/* ── Ticket Detail Modal ── */}
       <Modal
         animationType="slide"
         transparent
-        visible={selectedComplaint !== null}
-        onRequestClose={() => setSelectedComplaint(null)}
+        visible={selectedItem !== null}
+        onRequestClose={() => setSelectedItem(null)}
+        statusBarTranslucent
       >
         <View style={uiStyles.modalOverlay}>
           <KeyboardAvoidingView
@@ -429,18 +376,15 @@ export default function ComplaintsTab() {
           >
             <View style={uiStyles.modalHeader}>
               <Text style={uiStyles.modalTitle}>Ticket Details</Text>
-              <Pressable
-                style={uiStyles.closeBtn}
-                onPress={() => setSelectedComplaint(null)}
-              >
+              <Pressable style={uiStyles.closeBtn} onPress={() => setSelectedItem(null)}>
                 <X size={18} color="#4A5568" />
               </Pressable>
             </View>
-            {selectedComplaint && (
+            {selectedItem && (
               <ComplaintDetailModal
-                complaint={selectedComplaint}
+                complaint={selectedItem}
                 onAddComment={handleAddComment}
-                onClose={() => setSelectedComplaint(null)}
+                onClose={() => setSelectedItem(null)}
               />
             )}
           </KeyboardAvoidingView>
@@ -450,26 +394,39 @@ export default function ComplaintsTab() {
   );
 }
 
-const styles = StyleSheet.create({
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  sheetWrapper: {
+    width: '100%',
+  },
+
+  // Filter
   filterRow: {
     flexDirection: 'row',
     gap: 8,
     marginBottom: 16,
+    paddingRight: 8,
   },
   filterChip: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.65)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: 'rgba(255,255,255,0.8)',
   },
   filterChipActive: {
-    backgroundColor: '#2E7D32',
-    borderColor: '#2E7D32',
+    backgroundColor: '#1E4D2B',
+    borderColor: '#1E4D2B',
   },
   filterText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'InterMedium',
     color: '#4A5568',
   },

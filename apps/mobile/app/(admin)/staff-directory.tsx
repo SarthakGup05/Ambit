@@ -10,7 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { OnboardGuardForm } from '@/components/OnboardGuardForm';
 import { useRouter } from 'expo-router';
@@ -127,10 +127,13 @@ export default function StaffDirectoryScreen() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />}
                 ListEmptyComponent={
-                  <View style={uiStyles.emptyState}>
-                    <Shield size={40} color="#A3A1A8" strokeWidth={1.5} />
-                    <Text style={uiStyles.emptyText}>No guards onboarded yet</Text>
-                  </View>
+                  <AppEmptyState
+                    icon={Shield}
+                    title="No Guards Onboarded"
+                    description="Onboard security guards to authorize gate access and manage visitors."
+                    actionLabel="Onboard Guard"
+                    onAction={() => { triggerHaptic(); setModalVisible(true); }}
+                  />
                 }
               />
             </AppSectionCard>

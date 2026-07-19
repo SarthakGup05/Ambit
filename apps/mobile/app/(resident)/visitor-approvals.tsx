@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Platform, Alert, RefreshControl, InteractionManager } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, UserCheck, Check, X, ShieldAlert } from 'lucide-react-native';
@@ -123,10 +123,11 @@ export default function VisitorApprovalsScreen() {
               <Animated.View entering={FadeInUp.duration(400)}>
                 <AppSectionCard label="Current Gate Requests">
                   {visitors.length === 0 ? (
-                    <View style={uiStyles.emptyState}>
-                      <ShieldAlert size={40} color="#A3A1A8" strokeWidth={1.5} />
-                      <Text style={uiStyles.emptyText}>No visitors requesting entry</Text>
-                    </View>
+                    <AppEmptyState
+                      icon={ShieldAlert}
+                      title="No Entry Requests"
+                      description="You don't have any pending visitor approval requests at the gate."
+                    />
                   ) : (
                     visitors.map((item, idx) => {
                       const isPending = item.status === 'pending';

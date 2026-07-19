@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TextInput, Pressable, Platform, ActivityIndicator, RefreshControl } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground } from '@/components/common';
+import { ScreenBackground, AppEmptyState } from '@/components/common';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Search, X, ClipboardList } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -225,10 +225,11 @@ export default function VisitorLogsScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />
             }
             ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <ClipboardList size={40} color="#A3A1A8" strokeWidth={1.5} />
-                <Text style={styles.emptyText}>No visitor logs recorded</Text>
-              </View>
+              <AppEmptyState
+                icon={ClipboardList}
+                title="No Visitor Logs"
+                description={searchQuery.trim() ? `No visitor logs match your search for "${searchQuery}".` : "There are currently no visitor entry records in the log register."}
+              />
             }
           />
         )}

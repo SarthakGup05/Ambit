@@ -10,7 +10,7 @@ import {
   InteractionManager,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { Calendar as CalendarIcon, Sparkles } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -162,10 +162,16 @@ export default function BookingsTab() {
           ) : (
             <>
               {/* Active reservations */}
-              {bookings.length > 0 && (
-                <Animated.View entering={FadeInUp.duration(400).delay(80)}>
-                  <AppSectionCard label="Your Upcoming Bookings">
-                    {bookings.map((bk, idx) => {
+              <Animated.View entering={FadeInUp.duration(400).delay(80)}>
+                <AppSectionCard label="Your Upcoming Bookings">
+                  {bookings.length === 0 ? (
+                    <AppEmptyState
+                      icon={CalendarIcon}
+                      title="No Upcoming Bookings"
+                      description="You haven't reserved any amenities. Book facilities below to reserve space."
+                    />
+                  ) : (
+                    bookings.map((bk, idx) => {
                       const dateStr = new Date(bk.startTime).toLocaleDateString('en-US', {
                         weekday: 'short',
                         month: 'short',
@@ -202,24 +208,32 @@ export default function BookingsTab() {
                           isLast={idx === bookings.length - 1}
                         />
                       );
-                    })}
-                  </AppSectionCard>
-                </Animated.View>
-              )}
+                    })
+                  )}
+                </AppSectionCard>
+              </Animated.View>
 
               {/* Book Amenities Catalog */}
               <Animated.View entering={FadeInUp.duration(400).delay(140)}>
                 <AppSectionCard label="Book Facilities">
-                  {amenities.map((item, idx) => (
-                    <AppListItem
-                      key={item.id}
-                      Icon={Sparkles}
-                      title={item.name}
-                      subtitle={`${item.description} (Capacity: ${item.capacity} guests)`}
-                      onPress={() => handleOpenBooking(item)}
-                      isLast={idx === amenities.length - 1}
+                  {amenities.length === 0 ? (
+                    <AppEmptyState
+                      icon={Sparkles}
+                      title="No Facilities Available"
+                      description="There are no amenities configured for booking in this society yet."
                     />
-                  ))}
+                  ) : (
+                    amenities.map((item, idx) => (
+                      <AppListItem
+                        key={item.id}
+                        Icon={Sparkles}
+                        title={item.name}
+                        subtitle={`${item.description} (Capacity: ${item.capacity} guests)`}
+                        onPress={() => handleOpenBooking(item)}
+                        isLast={idx === amenities.length - 1}
+                      />
+                    ))
+                  )}
                 </AppSectionCard>
               </Animated.View>
             </>
@@ -237,6 +251,7 @@ export default function BookingsTab() {
         timeSlot={timeSlot}
         setTimeSlot={setTimeSlot}
         handleConfirmBooking={handleConfirmBooking}
+        bottomInset={insets.bottom}
       />
     </View>
   );
