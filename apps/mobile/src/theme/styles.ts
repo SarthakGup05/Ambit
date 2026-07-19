@@ -37,6 +37,16 @@ export const uiStyles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  /** Transparent header icon button (no background or border) */
+  transparentIconBtn: {
+    width: 44,
+    height: 44,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   /** Notification dot badge on header bell */
   notifDot: {
     position: 'absolute',

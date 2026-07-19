@@ -5,7 +5,7 @@ import { Manrope_400Regular, Manrope_500Medium, Manrope_700Bold } from "@expo-go
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
 import { useEffect, useState } from "react";
 import { useAuth } from "../src/features/auth/hooks/useAuth";
-import { RoleSwitcherBar } from "../src/components/common";
+import { RoleSwitcherBar, ToastProvider } from "../src/components/common";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -39,10 +39,9 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <ToastProvider>
       <Stack screenOptions={{ headerShown: false }} />
       <RoleSwitcherBar />
-    </>
+    </ToastProvider>
   );
 }
-
