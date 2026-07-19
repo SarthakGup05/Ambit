@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   Pressable,
   TextInput,
   ScrollView,
-  Platform,
   Alert,
 } from 'react-native';
 import { Text } from '@repo/ui';
@@ -26,9 +25,11 @@ import {
   CreateComplaintInput,
 } from '../types';
 
-interface CreateComplaintModalProps {
+export interface CreateComplaintModalProps {
   onSubmit: (data: CreateComplaintInput) => void;
   onClose: () => void;
+  /** Called on mount with the form's submit function so the parent button can trigger it */
+  registerSubmit?: (fn: () => void) => void;
 }
 
 const CATEGORIES: {
@@ -64,7 +65,12 @@ function triggerHaptic() {
   }
 }
 
-export function CreateComplaintModal({ onSubmit, onClose }: CreateComplaintModalProps) {
+/**
+ * CreateComplaintModal renders only the scrollable form fields.
+ * The submit button lives in the parent (complaints.tsx) so it is
+ * always visible — outside the scroll area, inside the modal card.
+ */
+export function CreateComplaintModal({ onSubmit, onClose, registerSubmit }: CreateComplaintModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<ComplaintCategory>('maintenance');
@@ -80,17 +86,28 @@ export function CreateComplaintModal({ onSubmit, onClose }: CreateComplaintModal
       Alert.alert('Missing Field', 'Please describe the issue in detail.');
       return;
     }
-
     onSubmit({
       title: title.trim(),
       description: description.trim(),
       category,
       priority,
+      flatNumber: 'A-1203',
     });
   };
 
+  // Register the submit function with the parent so its RAISE TICKET button can call it
+  useEffect(() => {
+    registerSubmit?.(handleSubmit);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, description, category, priority]);
+
   return (
-    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.scrollContent}
+    >
       {/* Category Picker */}
       <View style={styles.fieldGroup}>
         <Text style={uiStyles.sectionLabel}>Select Category</Text>
@@ -105,21 +122,10 @@ export function CreateComplaintModal({ onSubmit, onClose }: CreateComplaintModal
                   triggerHaptic();
                   setCategory(cat.id);
                 }}
-                style={[
-                  styles.categoryChip,
-                  isSelected && styles.categoryChipSelected,
-                ]}
+                style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
               >
-                <Icon
-                  size={16}
-                  color={isSelected ? '#2E7D32' : '#4A5568'}
-                />
-                <Text
-                  style={[
-                    styles.categoryText,
-                    isSelected && styles.categoryTextSelected,
-                  ]}
-                >
+                <Icon size={16} color={isSelected ? '#1E4D2B' : '#4A5568'} />
+                <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
                   {cat.label}
                 </Text>
               </Pressable>
@@ -150,12 +156,7 @@ export function CreateComplaintModal({ onSubmit, onClose }: CreateComplaintModal
                 {p.id === 'urgent' && (
                   <AlertTriangle size={12} color={p.color} style={{ marginRight: 3 }} />
                 )}
-                <Text
-                  style={[
-                    styles.priorityText,
-                    { color: isSelected ? p.color : '#8E8D94' },
-                  ]}
-                >
+                <Text style={[styles.priorityText, { color: isSelected ? p.color : '#8E8D94' }]}>
                   {p.label}
                 </Text>
               </Pressable>
@@ -194,24 +195,17 @@ export function CreateComplaintModal({ onSubmit, onClose }: CreateComplaintModal
           />
         </View>
       </View>
-
-      {/* Submit Button */}
-      <Pressable
-        onPress={handleSubmit}
-        style={({ pressed }) => [
-          styles.submitBtn,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-        ]}
-      >
-        <Text style={styles.submitBtnText}>Submit Complaint Ticket</Text>
-      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingTop: 4,
+    paddingBottom: 12,
+  },
   fieldGroup: {
-    marginBottom: 18,
+    marginBottom: 16,
     gap: 8,
   },
   categoryGrid: {
@@ -232,8 +226,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   categoryChipSelected: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-    borderColor: '#2E7D32',
+    backgroundColor: 'rgba(30, 77, 43, 0.12)',
+    borderColor: '#1E4D2B',
   },
   categoryText: {
     fontSize: 13,
@@ -241,7 +235,7 @@ const styles = StyleSheet.create({
     color: '#4A5568',
   },
   categoryTextSelected: {
-    color: '#2E7D32',
+    color: '#1E4D2B',
     fontFamily: 'InterBold',
   },
   priorityRow: {
@@ -277,25 +271,5 @@ const styles = StyleSheet.create({
     color: '#1C1B1F',
     flex: 1,
     padding: 0,
-  },
-  submitBtn: {
-    backgroundColor: '#2E7D32',
-    height: 52,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: Platform.OS === 'ios' ? 24 : 12,
-    shadowColor: '#2E7D32',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  submitBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontFamily: 'InterBold',
-    fontWeight: 'bold',
   },
 });

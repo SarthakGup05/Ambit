@@ -38,4 +38,5 @@ export interface CreateComplaintInput {
   description: string;
   category: ComplaintCategory;
   priority: ComplaintPriority;
+  flatNumber: string;
 }
