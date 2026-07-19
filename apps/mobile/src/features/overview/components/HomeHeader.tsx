@@ -3,8 +3,12 @@ import { View, StyleSheet, Pressable, Platform, Image } from 'react-native';
 import { Text } from '@repo/ui';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { BellIcon } from '../../../components/icons/BellIcon';
+import { BadgeIconWrapper } from '@/components/common';
+import { useNotificationStore } from '@/store';
 
 export function HomeHeader() {
+  const { unreadCount } = useNotificationStore();
+
   return (
     <View style={styles.container}>
       {/* Top Brand & Notification row */}
@@ -25,8 +29,9 @@ export function HomeHeader() {
         >
           <Pressable>
             <View style={styles.bellInner}>
-              <BellIcon size={22} />
-              <View style={styles.notifBadge} />
+              <BadgeIconWrapper count={unreadCount} theme="blood_red">
+                <BellIcon size={22} />
+              </BadgeIconWrapper>
             </View>
           </Pressable>
         </Animated.View>
@@ -145,34 +150,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   bellOuter: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#71717A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
   },
   bellInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
   },
   notifBadge: {
     position: 'absolute',
