@@ -12,7 +12,10 @@ import { Text } from '@repo/ui';
 import { uiStyles } from '@/theme';
 import { X, Clock, Info } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Amenity } from '../api';
+
+const FOREST_GREEN = '#1E4D2B';
 
 interface CreateBookingModalProps {
   visible: boolean;
@@ -23,6 +26,7 @@ interface CreateBookingModalProps {
   timeSlot: string;
   setTimeSlot: (val: string) => void;
   handleConfirmBooking: () => void;
+  bottomInset?: number;
 }
 
 function triggerHaptic() {
@@ -42,7 +46,10 @@ export function CreateBookingModal({
   timeSlot,
   setTimeSlot,
   handleConfirmBooking,
+  bottomInset,
 }: CreateBookingModalProps) {
+  const insets = useSafeAreaInsets();
+
   if (!visible || !selectedAmenity) return null;
 
   return (
@@ -51,12 +58,22 @@ export function CreateBookingModal({
       transparent
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={uiStyles.modalOverlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={uiStyles.modalContent}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={[
+            uiStyles.modalContent,
+            {
+              maxHeight: '90%',
+              flexDirection: 'column',
+              paddingBottom: 0, // Handled dynamically in footer via insets
+            },
+          ]}
         >
+          {/* Header */}
           <View style={uiStyles.modalHeader}>
             <Text style={uiStyles.modalTitle}>Reserve {selectedAmenity.name}</Text>
             <Pressable style={uiStyles.closeBtn} onPress={onClose}>
@@ -64,7 +81,13 @@ export function CreateBookingModal({
             </Pressable>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Scrollable Form Fields */}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ flexShrink: 1 }}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
             {/* Info Card */}
             <View style={styles.infoBox}>
               <Info size={16} color="#4A5568" style={{ marginRight: 6 }} />
@@ -92,7 +115,10 @@ export function CreateBookingModal({
                         triggerHaptic();
                         setBookingDate(val);
                       }}
-                      style={[styles.pillBtn, isActive && styles.pillBtnActive]}
+                      style={[
+                        styles.pillBtn,
+                        isActive && { backgroundColor: FOREST_GREEN, borderColor: FOREST_GREEN },
+                      ]}
                     >
                       <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
                         {label}
@@ -122,7 +148,10 @@ export function CreateBookingModal({
                         triggerHaptic();
                         setTimeSlot(slot);
                       }}
-                      style={[styles.pillBtn, isActive && styles.pillBtnActive]}
+                      style={[
+                        styles.pillBtn,
+                        isActive && { backgroundColor: FOREST_GREEN, borderColor: FOREST_GREEN },
+                      ]}
                     >
                       <Clock size={12} color={isActive ? '#FFFFFF' : '#4A5568'} style={{ marginRight: 4 }} />
                       <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
@@ -133,18 +162,21 @@ export function CreateBookingModal({
                 })}
               </View>
             </View>
+          </ScrollView>
 
-            {/* Submit Booking */}
+          {/* Sticky Bottom Confirm Button using Safe Area Insets */}
+          <View style={[styles.footer, { paddingBottom: Math.max(bottomInset ?? insets.bottom, 16) }]}>
             <Pressable
               onPress={handleConfirmBooking}
               style={({ pressed }) => [
-                styles.confirmBtn,
-                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
               ]}
             >
-              <Text style={styles.confirmBtnText}>Confirm Reservation</Text>
+              <View style={styles.confirmBtn}>
+                <Text style={styles.confirmBtnText}>Confirm Reservation</Text>
+              </View>
             </Pressable>
-          </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </View>
     </Modal>
@@ -152,6 +184,9 @@ export function CreateBookingModal({
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 16,
+  },
   infoBox: {
     flexDirection: 'row',
     backgroundColor: 'rgba(0, 0, 0, 0.035)',
@@ -187,10 +222,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  pillBtnActive: {
-    backgroundColor: '#2E7D32',
-    borderColor: '#2E7D32',
-  },
   pillText: {
     fontSize: 12,
     fontFamily: 'InterMedium',
@@ -200,15 +231,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'InterBold',
   },
+  footer: {
+    paddingTop: 12,
+    backgroundColor: '#FAF8F5',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+  },
   confirmBtn: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: FOREST_GREEN,
     height: 52,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
-    marginBottom: Platform.OS === 'ios' ? 24 : 12,
-    shadowColor: '#2E7D32',
+    shadowColor: FOREST_GREEN,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
