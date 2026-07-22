@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { Text } from '@repo/ui';
 import {
@@ -228,7 +227,7 @@ export function CreateEditMemberForm({ member, onSuccess, onClose }: FormProps) 
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <CustomSpinner color="#FFFFFF" size="small" />
           ) : (
             <Text style={styles.submitButtonText}>
               {isEditMode ? 'Save Changes' : 'Register Resident'}

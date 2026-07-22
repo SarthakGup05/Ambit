@@ -6,7 +6,6 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { Text } from '@repo/ui';
@@ -230,7 +229,7 @@ export function RaiseTicketSheet({ onSubmit, onClose, bottomInset }: RaiseTicket
         >
           <View style={[s.raiseBtn, isSubmitting && { opacity: 0.65 }]}>
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <CustomSpinner color="#FFFFFF" />
             ) : (
               <>
                 <Send size={17} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 8 }} />
