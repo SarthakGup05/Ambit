@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import Animated, { ZoomIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../../src/features/auth/hooks/useAuth';
 
 function triggerHaptic() {
@@ -28,6 +29,7 @@ function getInitials(name?: string) {
 }
 
 export default function AdminProfileTab() {
+  const router = useRouter();
   const { logout, user } = useAuth();
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
@@ -106,7 +108,7 @@ export default function AdminProfileTab() {
                 title="Society Configurations"
                 subtitle="Configure towers, flats & structures"
                 valueText="Configured"
-                onPress={() => Alert.alert('Configurations', 'Tower and flat layout builder coming soon.')}
+                onPress={() => router.push('/(admin)/layout-builder')}
                 isLast
               />
             </AppSectionCard>

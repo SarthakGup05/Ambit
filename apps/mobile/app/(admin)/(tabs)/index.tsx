@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Screen, Text, GridSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper, StatusModal } from '@/components/common';
 import { type, uiStyles } from '@/theme';
 import { useRouter } from 'expo-router';
 import { useNotificationStore } from '@/store';
@@ -22,11 +22,15 @@ import {
   CheckCircle,
   MessageSquare,
   Briefcase,
+  Plus,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '@/lib/axios';
+import { NotificationService } from '@/services/NotificationService';
+import { notifications } from '@/services/notifications';
+
 
 type SocietyStats = {
   residents: number;
@@ -97,10 +101,22 @@ function triggerHaptic() {
 
 export default function AdminHomeTab() {
   const router = useRouter();
+  const isAddingRef = React.useRef(false);
   const insets = useSafeAreaInsets();
   const { unreadCount } = useNotificationStore();
   const [refreshing, setRefreshing] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [statusModal, setStatusModal] = React.useState<{
+    visible: boolean;
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+  }>({
+    visible: false,
+    type: 'success',
+    title: '',
+    description: '',
+  });
   const [stats, setStats] = React.useState<SocietyStats>({
     residents: 256,
     towers: 4,
@@ -110,8 +126,12 @@ export default function AdminHomeTab() {
 
   const fetchDashboard = React.useCallback(async () => {
     try {
-      const analyticsRes = await api.get('/api/admin/analytics');
-      if (analyticsRes.data?.analytics) {
+      const [analyticsRes, notifs] = await Promise.all([
+        api.get('/api/admin/analytics').catch(() => null),
+        NotificationService.getNotifications().catch(() => []),
+      ]);
+
+      if (analyticsRes?.data?.analytics) {
         const a = analyticsRes.data.analytics;
         setStats((prev) => ({
           residents: a.totalResidents ?? prev.residents,
@@ -119,6 +139,11 @@ export default function AdminHomeTab() {
           flats: a.flats ?? prev.flats,
           staff: a.staff ?? prev.staff,
         }));
+      }
+
+      if (Array.isArray(notifs)) {
+        const unread = notifs.filter((n) => !n.isRead).length;
+        useNotificationStore.getState().setUnreadCount(unread);
       }
     } catch {
       // keep mock / previous values for preview
@@ -132,12 +157,27 @@ export default function AdminHomeTab() {
     fetchDashboard();
   }, [fetchDashboard]);
 
+  React.useEffect(() => {
+    // Register device for push notifications
+    notifications.registerForPushNotificationsAsync();
+
+    // Set up listeners for foreground push notification reception
+    const cleanup = notifications.setupListeners();
+    return () => {
+      cleanup();
+    };
+  }, []);
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchDashboard();
   };
 
   const handleManagePress = (item: (typeof MANAGEMENT)[number]) => {
+    if (isAddingRef.current) {
+      isAddingRef.current = false;
+      return;
+    }
     triggerHaptic();
     router.push(item.route);
   };
@@ -164,7 +204,14 @@ export default function AdminHomeTab() {
             <Text variant="h3" weight="bold" style={type.navTitle}>
               Admin Dashboard
             </Text>
-            <Pressable onPress={triggerHaptic} style={uiStyles.transparentIconBtn} hitSlop={12}>
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/notifications');
+              }}
+              style={uiStyles.transparentIconBtn}
+              hitSlop={12}
+            >
               <BadgeIconWrapper count={unreadCount} theme="blood_red">
                 <Bell size={22} color="#11111E" strokeWidth={2.2} />
               </BadgeIconWrapper>
@@ -208,20 +255,58 @@ export default function AdminHomeTab() {
           {/* Management Section */}
           <Animated.View entering={FadeInUp.duration(400).delay(140)}>
             <AppSectionCard label="Management">
-              {MANAGEMENT.map((item, idx) => (
-                <AppListItem
-                  key={item.id}
-                  Icon={item.Icon}
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  onPress={() => handleManagePress(item)}
-                  isLast={idx === MANAGEMENT.length - 1}
-                />
-              ))}
+              {MANAGEMENT.map((item, idx) => {
+                const isAmenities = item.id === 'amenities';
+                return (
+                  <AppListItem
+                    key={item.id}
+                    Icon={item.Icon}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    onPress={() => handleManagePress(item)}
+                    isLast={idx === MANAGEMENT.length - 1}
+                    rightElement={
+                      isAmenities ? (
+                        <Pressable
+                          style={({ pressed }) => [
+                            uiStyles.addBtn,
+                            {
+                              backgroundColor: '#E8F5E9',
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: 8,
+                            },
+                            pressed && { opacity: 0.7 },
+                          ]}
+                          onPress={() => {
+                            isAddingRef.current = true;
+                            triggerHaptic();
+                            router.push('/(admin)/amenity-form');
+                          }}
+                        >
+                          <Plus size={12} color="#2E7D32" strokeWidth={3} style={{ marginRight: 3 }} />
+                          <Text variant="caption" weight="bold" style={{ color: '#2E7D32' }}>
+                            Add
+                          </Text>
+                        </Pressable>
+                      ) : undefined
+                    }
+                  />
+                );
+              })}
             </AppSectionCard>
           </Animated.View>
         </ScrollView>
       </Screen>
+
+      {/* Status Feedback Modal */}
+      <StatusModal
+        visible={statusModal.visible}
+        type={statusModal.type}
+        title={statusModal.title}
+        description={statusModal.description}
+        onClose={() => setStatusModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 }
