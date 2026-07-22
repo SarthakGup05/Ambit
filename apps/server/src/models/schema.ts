@@ -36,6 +36,7 @@ export const user = pgTable("user", {
   banned: boolean("banned"),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  pushToken: text("push_token"),
 });
 
 // 3. Better-Auth Sessions
@@ -236,5 +237,35 @@ export const notifications = pgTable("notifications", {
   title: text("title").notNull(),
   body: text("body").notNull(),
   isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// 15. Towers (Layout Structure)
+export const towers = pgTable("towers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  societyId: uuid("society_id")
+    .notNull()
+    .references(() => societies.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// 16. Floors (Layout Structure)
+export const floors = pgTable("floors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  towerId: uuid("tower_id")
+    .notNull()
+    .references(() => towers.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// 17. Flats (Layout Structure)
+export const flats = pgTable("flats", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  floorId: uuid("floor_id")
+    .notNull()
+    .references(() => floors.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
