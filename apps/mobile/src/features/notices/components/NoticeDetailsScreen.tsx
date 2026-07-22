@@ -17,7 +17,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react-native';
 import { NOTICES } from '../data';
-import { getNoticeIcon } from './NoticesScreen';
+import { getNoticeIcon } from './NoticeCard';
 import Animated, {
   FadeIn,
   FadeInDown,
