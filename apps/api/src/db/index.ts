@@ -9,7 +9,10 @@ if (!databaseUrl) {
 }
 
 // Disable prefetch/prepared statements for database pooler compatibility (e.g. Supabase Transaction Pooler)
-const queryClient = postgres(databaseUrl, { prepare: false });
+const queryClient = postgres(databaseUrl, {
+  prepare: false,
+  onnotice: () => {}, // Suppress PostgreSQL notices (like column already exists) to keep logs clean
+});
 
 // Self-healing schema migrations for new columns
 queryClient.unsafe(`
