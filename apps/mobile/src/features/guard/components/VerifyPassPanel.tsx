@@ -4,7 +4,6 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
   Platform,
   Modal,
 } from 'react-native';
@@ -74,7 +73,7 @@ export function VerifyPassPanel({
 
           <Pressable onPress={onVerifyPass} disabled={verifying} style={styles.submitBtn}>
             {verifying ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <CustomSpinner color="#FFFFFF" />
             ) : (
               <>
                 <Sparkles size={20} color="#FFFFFF" />

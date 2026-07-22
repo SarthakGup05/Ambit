@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { Text } from '@repo/ui';
 import {
@@ -191,7 +190,7 @@ export function OnboardGuardForm({ onSuccess, onClose }: FormProps) {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <CustomSpinner color="#FFFFFF" size="small" />
           ) : (
             <Text style={styles.submitButtonText}>Confirm Onboarding</Text>
           )}

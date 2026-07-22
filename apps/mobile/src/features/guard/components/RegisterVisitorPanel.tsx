@@ -4,7 +4,6 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { Text } from '@repo/ui';
@@ -169,7 +168,7 @@ export function RegisterVisitorPanel({
         {/* Submit Action Button */}
         <Pressable onPress={onRegister} disabled={registering} style={styles.submitBtn}>
           {registering ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <CustomSpinner color="#FFFFFF" />
           ) : (
             <>
               <Text variant="body" weight="bold" style={styles.submitBtnText}>

@@ -5,13 +5,13 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { Screen, Text } from '@repo/ui';
 import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper } from '@/components/common';
 import { type, uiStyles } from '@/theme';
 import { useRouter } from 'expo-router';
 import { VisitorService, Visitor, VisitorStats } from '@/services/VisitorService';
+import { NotificationService } from '@/services/NotificationService';
 import {
   Menu,
   Bell,
@@ -77,14 +77,25 @@ export function GuardDashboard() {
 
   const recentVisitors = visitors.slice(0, 5);
 
+  const syncNotifications = useCallback(async () => {
+    try {
+      const list = await NotificationService.getNotifications();
+      const unread = list.filter((n) => !n.isRead).length;
+      useNotificationStore.getState().setUnreadCount(unread);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     fetchVisitors('all');
-  }, [fetchVisitors]);
+    syncNotifications();
+  }, [fetchVisitors, syncNotifications]);
 
   const onRefresh = async () => {
     triggerHaptic();
     setRefreshing(true);
-    await fetchVisitors('all');
+    await Promise.all([fetchVisitors('all'), syncNotifications()]);
     setRefreshing(false);
   };
 
@@ -147,7 +158,14 @@ export function GuardDashboard() {
                 Active Shift • Gate 1
               </Text>
             </View>
-            <Pressable onPress={() => triggerHaptic()} style={uiStyles.transparentIconBtn} hitSlop={12}>
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/notifications');
+              }}
+              style={uiStyles.transparentIconBtn}
+              hitSlop={12}
+            >
               <BadgeIconWrapper count={unreadCount} theme="blood_red">
                 <Bell size={22} color="#11111E" strokeWidth={2.2} />
               </BadgeIconWrapper>
@@ -229,7 +247,7 @@ export function GuardDashboard() {
             <AppSectionCard label="Recent Gate Activity">
               {loading ? (
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                  <ActivityIndicator size="small" color="#4E6D3B" />
+                  <CustomSpinner size="small" color="#4E6D3B" />
                 </View>
               ) : recentVisitors.length === 0 ? (
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
