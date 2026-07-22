@@ -1,40 +1,23 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Pressable,
   Platform,
-  Alert,
   RefreshControl,
   TextInput,
-  Clipboard,
-  Modal,
-  Share,
 } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
 import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { useRouter } from 'expo-router';
-import {
-  ArrowLeft,
-  UserPlus,
-  Copy,
-  Clock,
-  Key,
-  ShieldCheck,
-  User,
-  Truck,
-  Wrench,
-  X,
-  ImageDown,
-} from 'lucide-react-native';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { ArrowLeft, UserPlus, Copy, Key, User, Truck, Wrench } from 'lucide-react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { GuestPassService, GuestPass } from '@/services/GuestPassService';
+import { GuestPassQRModal } from '@/features/guests/components/GuestPassQRModal';
+import { Alert, Clipboard } from 'react-native';
 
 const FALLBACK_PASSES: GuestPass[] = [
   {
@@ -69,18 +52,13 @@ export default function PreApproveGuestScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPassForQr, setSelectedPassForQr] = useState<GuestPass | null>(null);
-  const qrSvgRef = useRef<any>(null);
 
   const loadData = useCallback(async () => {
     try {
       const list = await GuestPassService.getResidentGuestPasses();
-      if (list && list.length > 0) {
-        setPasses(list);
-      } else {
-        setPasses(FALLBACK_PASSES);
-      }
+      setPasses(list && list.length > 0 ? list : FALLBACK_PASSES);
     } catch (err: any) {
-      console.warn('Failed to load guest passes from API:', err.message || err);
+      console.warn('Failed to load guest passes:', err.message || err);
       setPasses(FALLBACK_PASSES);
     } finally {
       setIsLoading(false);
@@ -88,9 +66,7 @@ export default function PreApproveGuestScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -99,16 +75,14 @@ export default function PreApproveGuestScreen() {
 
   const handleCreatePass = async () => {
     if (!guestName.trim()) {
-      Alert.alert('Missing Field', 'Please enter your guest\'s name.');
+      Alert.alert('Missing Field', "Please enter your guest's name.");
       return;
     }
     triggerHaptic();
     setIsSubmitting(true);
-
     try {
-      const validToDate = new Date(Date.now() + 86400000).toISOString(); // 24 Hours validity
+      const validToDate = new Date(Date.now() + 86400000).toISOString();
       const newPass = await GuestPassService.createGuestPass(guestName.trim(), validToDate);
-
       let createdPass: GuestPass;
       if (newPass) {
         createdPass = newPass;
@@ -124,7 +98,6 @@ export default function PreApproveGuestScreen() {
         setPasses((prev) => [createdPass, ...prev]);
       }
       setGuestName('');
-      // Immediately show QR modal for the newly created pass
       setSelectedPassForQr(createdPass);
     } catch {
       Alert.alert('Request Failed', 'Could not create guest pass.');
@@ -139,43 +112,6 @@ export default function PreApproveGuestScreen() {
     Alert.alert('Copied to Clipboard', `Entry code ${code} is ready to share.`);
   };
 
-  const handleSharePass = async (pass: GuestPass) => {
-    triggerHaptic();
-    try {
-      const message = `Hi! Here is your entry pass code for Ambit:\nCode: ${pass.token}\nValid until: ${new Date(pass.validTo).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}.\nSee you soon!`;
-      await Share.share({ message });
-    } catch (err) {
-      // ignore
-    }
-  };
-
-  const handleShareAsImage = async (pass: GuestPass) => {
-    triggerHaptic();
-    if (!qrSvgRef.current) {
-      Alert.alert('Error', 'QR Code is not ready yet.');
-      return;
-    }
-    try {
-      qrSvgRef.current.toDataURL(async (base64Data: string) => {
-        const fileUri = `${FileSystem.cacheDirectory}ambit_pass_${pass.token}.jpg`;
-        await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const canShare = await Sharing.isAvailableAsync();
-        if (!canShare) {
-          Alert.alert('Sharing Not Available', 'Sharing is not supported on this device.');
-          return;
-        }
-        await Sharing.shareAsync(fileUri, {
-          mimeType: 'image/jpeg',
-          dialogTitle: `Ambit Gate Pass - ${pass.guestName}`,
-        });
-      });
-    } catch (err) {
-      Alert.alert('Share Failed', 'Could not share QR code image.');
-    }
-  };
-
   return (
     <View style={{ flex: 1 }}>
       <ScreenBackground />
@@ -185,10 +121,7 @@ export default function PreApproveGuestScreen() {
           <View style={uiStyles.header}>
             <Pressable
               style={uiStyles.iconBtn}
-              onPress={() => {
-                triggerHaptic();
-                router.back();
-              }}
+              onPress={() => { triggerHaptic(); router.back(); }}
               hitSlop={12}
             >
               <ArrowLeft size={22} color="#11111E" strokeWidth={2.2} />
@@ -205,11 +138,11 @@ export default function PreApproveGuestScreen() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E4D2B" />
             }
           >
-            {/* Generate form card */}
+            {/* Create Form */}
             <Animated.View entering={FadeInUp.duration(400)}>
               <AppSectionCard label="New Gate Pass">
                 <View style={styles.formContainer}>
-                  {/* Visitor Type Selector */}
+                  {/* Guest Type Selector */}
                   <View style={styles.formGroup}>
                     <Text style={uiStyles.sectionLabel}>Visitor Type</Text>
                     <View style={styles.typeRow}>
@@ -219,10 +152,7 @@ export default function PreApproveGuestScreen() {
                         return (
                           <Pressable
                             key={t.id}
-                            onPress={() => {
-                              triggerHaptic();
-                              setGuestType(t.id);
-                            }}
+                            onPress={() => { triggerHaptic(); setGuestType(t.id); }}
                             style={[styles.typePill, isSelected && styles.typePillActive]}
                           >
                             <Icon size={14} color={isSelected ? '#FFFFFF' : '#4A5568'} style={{ marginRight: 4 }} />
@@ -252,9 +182,7 @@ export default function PreApproveGuestScreen() {
                   <Pressable
                     onPress={handleCreatePass}
                     disabled={isSubmitting}
-                    style={({ pressed }) => [
-                      { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] }
-                    ]}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] }]}
                   >
                     <View style={styles.submitBtn}>
                       <Text style={styles.submitBtnText}>
@@ -266,7 +194,7 @@ export default function PreApproveGuestScreen() {
               </AppSectionCard>
             </Animated.View>
 
-            {/* Active passes list */}
+            {/* Passes List */}
             {isLoading ? (
               <ListSkeleton count={2} />
             ) : (
@@ -290,17 +218,11 @@ export default function PreApproveGuestScreen() {
                           Icon={UserPlus}
                           title={item.guestName}
                           subtitle={`Expires: ${expDate}`}
-                          onPress={() => {
-                            triggerHaptic();
-                            setSelectedPassForQr(item);
-                          }}
+                          onPress={() => { triggerHaptic(); setSelectedPassForQr(item); }}
                           rightElement={
                             <Pressable
                               style={styles.codeBadge}
-                              onPress={(e) => {
-                                e.stopPropagation();
-                                handleCopyCode(item.token);
-                              }}
+                              onPress={(e) => { e.stopPropagation(); handleCopyCode(item.token); }}
                             >
                               <Text style={styles.codeText}>{item.token}</Text>
                               <Copy size={12} color="#1E4D2B" style={{ marginLeft: 6 }} />
@@ -318,105 +240,16 @@ export default function PreApproveGuestScreen() {
         </View>
       </Screen>
 
-      {/* QR Code Pass Modal */}
-      <Modal
-        animationType="slide"
-        transparent
-        visible={selectedPassForQr !== null}
-        onRequestClose={() => setSelectedPassForQr(null)}
-        statusBarTranslucent
-      >
-        <View style={qrStyles.overlay}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelectedPassForQr(null)} />
-          <View style={qrStyles.sheet}>
-            {/* Header */}
-            <View style={qrStyles.header}>
-              <Text style={qrStyles.headerTitle}>Guest Gate Pass</Text>
-              <Pressable style={qrStyles.closeBtn} onPress={() => setSelectedPassForQr(null)}>
-                <X size={18} color="#4A5568" />
-              </Pressable>
-            </View>
-
-            {selectedPassForQr && (
-              <View style={qrStyles.content}>
-                <Text style={qrStyles.guestName}>{selectedPassForQr.guestName}</Text>
-                <Text style={qrStyles.validity}>
-                  Valid until:{' '}
-                  {new Date(selectedPassForQr.validTo).toLocaleDateString([], {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Text>
-
-                {/* QR Code Container */}
-                <View style={qrStyles.qrContainer}>
-                  <QRCode
-                    value={selectedPassForQr.token}
-                    size={180}
-                    color="#1E4D2B"
-                    backgroundColor="#FFFFFF"
-                    logo={require('../../assets/ambit_logo.png')}
-                    logoSize={40}
-                    logoBorderRadius={10}
-                    logoBackgroundColor="#FFFFFF"
-                    quietZone={15}
-                    getRef={(ref) => { qrSvgRef.current = ref; }}
-                  />
-                </View>
-
-                {/* Large Code Display */}
-                <Text style={qrStyles.tokenText}>{selectedPassForQr.token}</Text>
-
-                {/* Actions */}
-                <View style={qrStyles.actionsRow}>
-                  <Pressable
-                    onPress={() => handleCopyCode(selectedPassForQr.token)}
-                    style={[qrStyles.btn, qrStyles.btnSec]}
-                  >
-                    <Copy size={16} color="#1E4D2B" style={{ marginRight: 6 }} />
-                    <Text style={qrStyles.btnTextSec}>Copy Code</Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => handleShareAsImage(selectedPassForQr)}
-                    style={[qrStyles.btn, qrStyles.btnPri]}
-                  >
-                    <ImageDown size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={qrStyles.btnTextPri}>Share QR</Text>
-                  </Pressable>
-                </View>
-
-                {/* Share text pass link */}
-                <Pressable
-                  onPress={() => handleSharePass(selectedPassForQr)}
-                  style={qrStyles.shareTextBtn}
-                >
-                  <Text style={qrStyles.shareTextBtnText}>Share as text message instead</Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
+      {/* QR Modal */}
+      <GuestPassQRModal pass={selectedPassForQr} onClose={() => setSelectedPassForQr(null)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  formContainer: {
-    paddingVertical: 4,
-    gap: 16,
-  },
-  formGroup: {
-    gap: 8,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 2,
-  },
+  formContainer: { paddingVertical: 4, gap: 16 },
+  formGroup: { gap: 8 },
+  typeRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
   typePill: {
     flex: 1,
     flexDirection: 'row',
@@ -428,19 +261,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  typePillActive: {
-    backgroundColor: '#1E4D2B',
-    borderColor: '#1E4D2B',
-  },
-  typeText: {
-    fontSize: 12,
-    fontFamily: 'InterMedium',
-    color: '#4A5568',
-  },
-  typeTextActive: {
-    color: '#FFFFFF',
-    fontFamily: 'InterBold',
-  },
+  typePillActive: { backgroundColor: '#1E4D2B', borderColor: '#1E4D2B' },
+  typeText: { fontSize: 12, fontFamily: 'InterMedium', color: '#4A5568' },
+  typeTextActive: { color: '#FFFFFF', fontFamily: 'InterBold' },
   submitBtn: {
     backgroundColor: '#1E4D2B',
     height: 50,
@@ -454,12 +277,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  submitBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontFamily: 'InterBold',
-    fontWeight: 'bold',
-  },
+  submitBtnText: { color: '#FFFFFF', fontSize: 14, fontFamily: 'InterBold', fontWeight: 'bold' },
   codeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -470,139 +288,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(30, 77, 43, 0.15)',
   },
-  codeText: {
-    fontSize: 13,
-    fontFamily: 'ManropeBold',
-    color: '#1E4D2B',
-    fontWeight: 'bold',
-  },
-});
-
-const qrStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#FAF8F5',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: Platform.OS === 'ios' ? 44 : 32,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontFamily: 'ManropeBold',
-    color: '#1C1B1F',
-    fontWeight: 'bold',
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  guestName: {
-    fontSize: 22,
-    fontFamily: 'ManropeBold',
-    fontWeight: '700',
-    color: '#1C1B1F',
-  },
-  validity: {
-    fontSize: 12,
-    fontFamily: 'InterMedium',
-    color: '#8E8D94',
-    marginTop: 4,
-  },
-  qrContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 28,
-    marginTop: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(30, 77, 43, 0.08)',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
-  },
-  tokenText: {
-    fontSize: 26,
-    fontFamily: 'InterBold',
-    fontWeight: 'bold',
-    color: '#1E4D2B',
-    letterSpacing: 4,
-    marginTop: 18,
-    textAlign: 'center',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 28,
-    width: '100%',
-  },
-  btn: {
-    flex: 1,
-    height: 50,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  btnPri: {
-    backgroundColor: '#1E4D2B',
-    shadowColor: '#1E4D2B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  btnSec: {
-    backgroundColor: 'rgba(30, 77, 43, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(30, 77, 43, 0.15)',
-  },
-  btnTextPri: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontFamily: 'InterBold',
-    fontWeight: 'bold',
-  },
-  btnTextSec: {
-    color: '#1E4D2B',
-    fontSize: 14,
-    fontFamily: 'InterBold',
-    fontWeight: 'bold',
-  },
-  shareTextBtn: {
-    marginTop: 16,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  shareTextBtnText: {
-    fontSize: 13,
-    fontFamily: 'InterMedium',
-    color: '#8E8D94',
-    textDecorationLine: 'underline',
-  },
+  codeText: { fontSize: 13, fontFamily: 'ManropeBold', color: '#1E4D2B', fontWeight: 'bold' },
 });
