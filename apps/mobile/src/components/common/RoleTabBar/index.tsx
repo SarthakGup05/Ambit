@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { Text } from '@repo/ui';
 import { type } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,7 +40,17 @@ export function RoleTabBar({ state, navigation, tabs }: Props) {
   };
 
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View
+      style={[
+        styles.wrap,
+        {
+          paddingBottom:
+            Platform.OS === 'android'
+              ? Math.max(insets.bottom, 14)
+              : Math.max(insets.bottom, 10),
+        },
+      ]}
+    >
       <View style={styles.bar}>
         {tabs.map((tab) => {
           const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
