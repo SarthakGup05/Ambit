@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 import { Screen, Text } from '@repo/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -157,7 +156,7 @@ export function NoticeDetailsScreen() {
           {/* Loading indicator when auto-acknowledging */}
           {loading && (
             <Animated.View entering={FadeIn} style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#2E7D32" />
+              <CustomSpinner size="small" color="#2E7D32" />
               <Text style={styles.loadingText}>Acknowledging receipt...</Text>
             </Animated.View>
           )}

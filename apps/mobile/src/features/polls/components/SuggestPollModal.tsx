@@ -7,7 +7,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
@@ -138,7 +137,7 @@ export function SuggestPollModal({ isVisible, onClose, onSubmit }: SuggestPollMo
                       disabled={isButtonDisabled}
                     >
                       {isSubmitting ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
+                        <CustomSpinner size="small" color="#FFFFFF" />
                       ) : (
                         <>
                           <Send size={14} color="#FFFFFF" style={{ marginRight: 6 }} />

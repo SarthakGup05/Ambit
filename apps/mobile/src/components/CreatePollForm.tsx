@@ -4,7 +4,6 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { Text } from '@repo/ui';
@@ -183,7 +182,7 @@ export function CreatePollForm({ onSuccess, onClose }: FormProps) {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <CustomSpinner color="#FFFFFF" size="small" />
           ) : (
             <Text style={s.submitButtonText}>Launch Voting Poll</Text>
           )}

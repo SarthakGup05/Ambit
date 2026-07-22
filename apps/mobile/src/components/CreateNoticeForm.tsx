@@ -5,7 +5,6 @@ import {
   Pressable,
   Switch,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { Text } from '@repo/ui';
 import {
@@ -202,7 +201,7 @@ export function CreateNoticeForm({ onSuccess, onClose }: FormProps) {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <CustomSpinner color="#FFFFFF" size="small" />
           ) : (
             <Text style={s.submitButtonText}>Publish Broadcast</Text>
           )}
