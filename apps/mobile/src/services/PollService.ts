@@ -15,6 +15,13 @@ export interface Poll {
   totalVotes: number;
 }
 
+export interface EnhancedPoll extends Poll {
+  isFeatured?: boolean;
+  description?: string;
+  expiresLabel?: string;
+  icon?: string;
+}
+
 export class PollService {
   /**
    * 🗳️ Fetch all community polls for the resident's society
