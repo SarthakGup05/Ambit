@@ -16,6 +16,7 @@ const queryClient = postgres(databaseUrl, {
 
 // Self-healing schema migrations for new columns
 queryClient.unsafe(`
+  ALTER TABLE "user" ADD COLUMN IF NOT EXISTS push_token text;
   ALTER TABLE visitors ADD COLUMN IF NOT EXISTS check_in_time timestamp;
   ALTER TABLE visitors ADD COLUMN IF NOT EXISTS check_out_time timestamp;
   ALTER TABLE amenities ADD COLUMN IF NOT EXISTS status text DEFAULT 'active';

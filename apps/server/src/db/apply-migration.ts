@@ -15,8 +15,8 @@ if (!databaseUrl) {
 async function applyLatestMigration() {
   const sql = postgres(databaseUrl!, { max: 1, prepare: false });
   try {
-    console.log("⏳ Applying 0002_massive_cassandra_nova.sql migration to PostgreSQL database...");
-    const migrationFile = path.resolve("./drizzle/0002_massive_cassandra_nova.sql");
+    console.log("⏳ Applying 0003_stale_ikaris.sql migration to PostgreSQL database...");
+    const migrationFile = path.resolve("./drizzle/0003_stale_ikaris.sql");
     const sqlContent = fs.readFileSync(migrationFile, "utf-8");
 
     // Execute statements split by semicolon or statement-breakpoint

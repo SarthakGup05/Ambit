@@ -290,7 +290,7 @@ async function seed() {
             residentId: residentUser.id,
             startTime: slot1Start,
             endTime: slot1End,
-            status: "confirmed" as const,
+            status: "pending" as const, // Pending admin approval
           },
           {
             societyId: society.id,
