@@ -11,8 +11,8 @@ import {
   Text as RNText,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppEmptyState } from '@/components/common';
-import { useRouter } from 'expo-router';
+import { ScreenBackground, AppEmptyState, StatusModal } from '@/components/common';
+import { useRouter, useFocusEffect } from 'expo-router';
 import {
   ArrowLeft,
   Plus,
@@ -25,12 +25,12 @@ import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '@/lib/axios';
+import { uiStyles, type } from '@/theme';
 
 import {
   AdminAmenitiesStatsHeader,
   AdminAmenityCard,
   AdminAmenityItem,
-  AdminCreateAmenityModal,
   AdminBookingLogsList,
   AdminBookingLog,
 } from '@/features/amenities/components';
@@ -120,9 +120,17 @@ export default function AdminAmenitiesScreen() {
   const [bookingLogs, setBookingLogs] = useState<AdminBookingLog[]>([]);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'maintenance'>('all');
 
-  // Modal State
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingAmenity, setEditingAmenity] = useState<AdminAmenityItem | null>(null);
+  const [statusModal, setStatusModal] = useState<{
+    visible: boolean;
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+  }>({
+    visible: false,
+    type: 'success',
+    title: '',
+    description: '',
+  });
 
   const loadData = useCallback(async () => {
     try {
@@ -174,7 +182,7 @@ export default function AdminAmenitiesScreen() {
             flatNumber: b.flatNumber || 'N/A',
             timeSlot,
             dateStr,
-            status: b.status === 'cancelled' ? 'cancelled' : 'confirmed',
+            status: b.status || 'confirmed',
           };
         });
         setBookingLogs(mappedLogs);
@@ -195,55 +203,28 @@ export default function AdminAmenitiesScreen() {
     return () => task.cancel();
   }, [loadData]);
 
+  // Reload list whenever we return from the form screen
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadData();
   }, [loadData]);
 
-  // Handle Create / Save
-  const handleSaveAmenity = async (data: Partial<AdminAmenityItem>) => {
+  // Navigate to form screen for creating / editing
+  const openForm = (item?: AdminAmenityItem) => {
     triggerHaptic();
-
-    try {
-      if (data.id) {
-        // Edit existing
-        const response = await api.put(`/api/admin/amenities/${data.id}`, {
-          name: data.name,
-          description: data.description,
-          capacity: data.capacity,
-          status: data.status,
-          operatingHours: data.operatingHours,
-          imageUrl: data.imageUrl,
-        });
-
-        if (response.data?.amenity) {
-          setAmenities((prev) =>
-            prev.map((item) => (item.id === data.id ? response.data.amenity : item))
-          );
-          Alert.alert('Facility Updated', `${data.name} has been updated.`);
-        }
-      } else {
-        // Create new
-        const response = await api.post('/api/admin/amenities', {
-          name: data.name,
-          description: data.description,
-          capacity: data.capacity,
-          status: data.status || 'active',
-          operatingHours: data.operatingHours || '06:00 AM - 10:00 PM',
-          imageUrl: data.imageUrl,
-        });
-
-        if (response.data?.amenity) {
-          setAmenities((prev) => [response.data.amenity, ...prev]);
-          Alert.alert('Facility Created', `${response.data.amenity.name} is now available.`);
-        }
-      }
-
-      setModalVisible(false);
-      setEditingAmenity(null);
-    } catch (err: any) {
-      const message = err.response?.data?.error || 'Failed to save facility';
-      Alert.alert('Error', message);
+    if (item) {
+      router.push({
+        pathname: '/(admin)/amenity-form',
+        params: { id: item.id, amenityData: JSON.stringify(item) },
+      });
+    } else {
+      router.push('/(admin)/amenity-form');
     }
   };
 
@@ -261,14 +242,21 @@ export default function AdminAmenitiesScreen() {
         setAmenities((prev) =>
           prev.map((a) => (a.id === item.id ? response.data.amenity : a))
         );
-        Alert.alert(
-          'Status Changed',
-          `${item.name} status changed to ${nextStatus === 'maintenance' ? 'Under Maintenance' : 'Operational'}.`
-        );
+        setStatusModal({
+          visible: true,
+          type: 'success',
+          title: 'Status Changed',
+          description: `${item.name} is now ${nextStatus === 'maintenance' ? 'under maintenance' : 'operational'}.`,
+        });
       }
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update status';
-      Alert.alert('Error', message);
+      setStatusModal({
+        visible: true,
+        type: 'error',
+        title: 'Status Update Failed',
+        description: message,
+      });
     }
   };
 
@@ -288,10 +276,20 @@ export default function AdminAmenitiesScreen() {
             try {
               await api.delete(`/api/admin/amenities/${id}`);
               setAmenities((prev) => prev.filter((a) => a.id !== id));
-              Alert.alert('Facility Deleted', `${target?.name || 'Amenity'} has been deleted.`);
+              setStatusModal({
+                visible: true,
+                type: 'success',
+                title: 'Facility Deleted',
+                description: `${target?.name || 'Amenity'} has been deleted.`,
+              });
             } catch (err: any) {
               const message = err.response?.data?.error || 'Failed to delete facility';
-              Alert.alert('Error', message);
+              setStatusModal({
+                visible: true,
+                type: 'error',
+                title: 'Deletion Failed',
+                description: message,
+              });
             }
           },
         },
@@ -299,7 +297,7 @@ export default function AdminAmenitiesScreen() {
     );
   };
 
-  // Toggle Booking Log Status
+  // Toggle Booking Log Status (For confirmed/cancelled status toggle)
   const handleToggleLogStatus = async (logId: string) => {
     triggerHaptic();
     const log = bookingLogs.find((l) => l.id === logId);
@@ -312,13 +310,45 @@ export default function AdminAmenitiesScreen() {
       setBookingLogs((prev) =>
         prev.map((l) => (l.id === logId ? { ...l, status: nextStatus } : l))
       );
-      Alert.alert(
-        'Booking Status Updated',
-        `Booking status has been set to ${nextStatus === 'confirmed' ? 'Confirmed' : 'Cancelled'}.`
-      );
+      setStatusModal({
+        visible: true,
+        type: 'success',
+        title: 'Booking Updated',
+        description: `Booking status set to ${nextStatus === 'confirmed' ? 'Confirmed' : 'Cancelled'}.`,
+      });
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update booking status';
-      Alert.alert('Error', message);
+      setStatusModal({
+        visible: true,
+        type: 'error',
+        title: 'Update Failed',
+        description: message,
+      });
+    }
+  };
+
+  // Set explicit booking status (Accept / Decline)
+  const handleSetBookingStatus = async (logId: string, status: 'confirmed' | 'cancelled') => {
+    triggerHaptic();
+    try {
+      await api.patch(`/api/bookings/${logId}`, { status });
+      setBookingLogs((prev) =>
+        prev.map((l) => (l.id === logId ? { ...l, status } : l))
+      );
+      setStatusModal({
+        visible: true,
+        type: 'success',
+        title: 'Booking Handled',
+        description: `Booking reservation has been ${status === 'confirmed' ? 'approved' : 'declined'}.`,
+      });
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Failed to update booking status';
+      setStatusModal({
+        visible: true,
+        type: 'error',
+        title: 'Action Failed',
+        description: message,
+      });
     }
   };
 
@@ -343,37 +373,21 @@ export default function AdminAmenitiesScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2E7D32" />}
         >
           {/* Header */}
-          <Animated.View entering={FadeIn.duration(300)} style={styles.headerRow}>
+          <Animated.View entering={FadeIn.duration(300)} style={[uiStyles.header, { paddingHorizontal: 20 }]}>
             <Pressable
-              style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+              style={uiStyles.iconBtn}
               onPress={() => {
                 triggerHaptic();
                 router.back();
               }}
+              hitSlop={12}
             >
-              <ArrowLeft size={20} color="#111827" />
+              <ArrowLeft size={22} color="#11111E" strokeWidth={2.2} />
             </Pressable>
-
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text variant="h2" weight="bold" style={styles.headerTitle}>
-                Amenities Admin
-              </Text>
-              <Text variant="body" style={styles.headerSubtitle}>
-                Configure facilities, status & resident logs
-              </Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [styles.addFacilityBtn, pressed && { opacity: 0.85 }]}
-              onPress={() => {
-                triggerHaptic();
-                setEditingAmenity(null);
-                setModalVisible(true);
-              }}
-            >
-              <Plus size={18} color="#FFF" />
-              <RNText style={styles.addBtnText}>Add Amenity</RNText>
-            </Pressable>
+            <Text variant="h3" weight="bold" style={type.navTitle}>
+              Amenities Admin
+            </Text>
+            <View style={{ width: 46 }} />
           </Animated.View>
 
           {/* Stats Banner */}
@@ -385,11 +399,24 @@ export default function AdminAmenitiesScreen() {
 
           {/* Filter Bar */}
           <View style={styles.filterSection}>
-            <View style={styles.filterHeader}>
-              <Text style={styles.filterTitle}>Society Facilities</Text>
-              <View style={styles.filterCountBadge}>
-                <Text style={styles.filterCountText}>{filteredAmenities.length} Items</Text>
+            <View style={[styles.filterHeader, { minHeight: 40 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={styles.filterTitle}>Society Facilities</Text>
+                <View style={styles.filterCountBadge}>
+                  <Text style={styles.filterCountText}>{filteredAmenities.length} Items</Text>
+                </View>
               </View>
+              <Pressable
+                style={({ pressed }) => [
+                  uiStyles.addBtn,
+                  { backgroundColor: '#2E7D32', shadowColor: '#2E7D32' },
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={() => openForm()}
+              >
+                <Plus size={15} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 4 }} />
+                <Text style={uiStyles.addBtnText}>Add Amenity</Text>
+              </Pressable>
             </View>
 
             <View style={styles.filterPillsRow}>
@@ -474,11 +501,7 @@ export default function AdminAmenitiesScreen() {
               title="No Facilities Found"
               description="No society amenities match your selected status filter."
               actionLabel="Add New Amenity"
-              onAction={() => {
-                triggerHaptic();
-                setEditingAmenity(null);
-                setModalVisible(true);
-              }}
+              onAction={() => openForm()}
             />
           ) : (
             filteredAmenities.map((item, idx) => (
@@ -486,10 +509,7 @@ export default function AdminAmenitiesScreen() {
                 key={item.id}
                 item={item}
                 index={idx}
-                onEdit={(target) => {
-                  setEditingAmenity(target);
-                  setModalVisible(true);
-                }}
+                onEdit={(target) => openForm(target)}
                 onToggleStatus={handleToggleStatus}
                 onDelete={handleDeleteAmenity}
               />
@@ -500,17 +520,19 @@ export default function AdminAmenitiesScreen() {
           <AdminBookingLogsList
             logs={bookingLogs}
             onToggleLogStatus={handleToggleLogStatus}
+            onAccept={(logId) => handleSetBookingStatus(logId, 'confirmed')}
+            onDecline={(logId) => handleSetBookingStatus(logId, 'cancelled')}
           />
         </ScrollView>
       </Screen>
 
-      {/* Add / Edit Modal */}
-      <AdminCreateAmenityModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleSaveAmenity}
-        editingAmenity={editingAmenity}
-        bottomInset={insets.bottom}
+      {/* Status Feedback Modal */}
+      <StatusModal
+        visible={statusModal.visible}
+        type={statusModal.type}
+        title={statusModal.title}
+        description={statusModal.description}
+        onClose={() => setStatusModal((prev) => ({ ...prev, visible: false }))}
       />
     </View>
   );
@@ -522,63 +544,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    marginTop: 6,
-    gap: 12,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#1E293B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(226,232,240,1)',
-  },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.7,
-    lineHeight: 30,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '500',
-    marginTop: 2,
-    letterSpacing: 0.1,
-  },
-  addFacilityBtn: {
-    backgroundColor: '#2E7D32',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 10,
-    borderRadius: 12,
-    shadowColor: '#2E7D32',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.30,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  addBtnText: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.1,
   },
   filterSection: {
     paddingHorizontal: 20,
