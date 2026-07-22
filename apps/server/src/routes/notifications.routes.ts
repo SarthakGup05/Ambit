@@ -4,6 +4,7 @@ import {
   getNotifications,
   markAsRead,
   markAllAsRead,
+  registerPushToken,
 } from "../controllers/notifications.controller.js";
 
 const router = Router();
@@ -14,6 +15,11 @@ router.use(authenticate, requireSociety);
  * 🔔 Get user notifications
  */
 router.get("/", getNotifications);
+
+/**
+ * 📲 Register client push token
+ */
+router.post("/register-token", registerPushToken);
 
 /**
  * 👁️ Mark a specific notification as read
