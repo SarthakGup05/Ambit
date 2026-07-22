@@ -128,7 +128,7 @@ export async function createBooking(req: Request, res: Response, next: NextFunct
       return res.status(409).json({ error: "Timeslot is already booked by another resident" });
     }
 
-    // 2. Insert booking
+    // 2. Insert booking (defaults to 'pending' until approved by admin)
     const [newBooking] = await db
       .insert(bookings)
       .values({
@@ -137,7 +137,7 @@ export async function createBooking(req: Request, res: Response, next: NextFunct
         residentId: req.user.id,
         startTime: start,
         endTime: end,
-        status: "confirmed", // Auto-confirm in demo mode
+        status: "pending", // Requires admin approval
       })
       .returning();
 
