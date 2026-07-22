@@ -43,13 +43,22 @@ export function Text({ children, variant = 'body', weight, className, style, ...
   }
 
   // 4. Base styles without the font-title/font-body classes to avoid conflicts
-  const variantStyles = {
-    h1: 'text-3xl text-[#000000]',
-    h2: 'text-2xl text-[#000000]',
-    h3: 'text-lg text-[#000000]',
-    body: 'text-base text-[#11111E]',
-    caption: 'text-xs text-[#5E5D6A]',
-    label: 'text-sm text-[#000000]',
+  const defaultSize = {
+    h1: 'text-3xl',
+    h2: 'text-2xl',
+    h3: 'text-lg',
+    body: 'text-base',
+    caption: 'text-xs',
+    label: 'text-sm',
+  }[variant];
+
+  const defaultColor = {
+    h1: 'text-[#000000]',
+    h2: 'text-[#000000]',
+    h3: 'text-[#000000]',
+    body: 'text-[#11111E]',
+    caption: 'text-[#5E5D6A]',
+    label: 'text-[#000000]',
   }[variant];
 
   // 5. Flatten styles and strip out fontFamily/fontWeight to prevent native OS font fallbacks
@@ -58,9 +67,20 @@ export function Text({ children, variant = 'body', weight, className, style, ...
   delete cleanStyle.fontFamily;
   delete cleanStyle.fontWeight;
 
+  // Check if color is explicitly overridden in style or className
+  const hasCustomColor = 
+    cleanStyle.color !== undefined || 
+    (className && /\btext-(?:white|black|transparent|current|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|\[(?:#|rgb|hsl|rgba|hsla)[^\]]+\])/i.test(className));
+
+  const resolvedClassName = cn(
+    defaultSize,
+    !hasCustomColor && defaultColor,
+    className
+  );
+
   return (
     <RNText 
-      className={cn(variantStyles, className)} 
+      className={resolvedClassName} 
       style={[{ fontFamily, fontWeight: 'normal' }, cleanStyle]} 
       {...props}
     >
