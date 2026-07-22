@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
 import { Text } from '@repo/ui';
 import { X, Sparkles, Building2, Users, Clock, Check } from 'lucide-react-native';
@@ -23,6 +24,14 @@ interface AdminCreateAmenityModalProps {
   bottomInset: number;
 }
 
+const PRESET_IMAGES = [
+  { label: 'Pool', url: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800' },
+  { label: 'Gym', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800' },
+  { label: 'Tennis', url: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800' },
+  { label: 'Lounge', url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800' },
+  { label: 'Park', url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800' },
+];
+
 export const AdminCreateAmenityModal: React.FC<AdminCreateAmenityModalProps> = ({
   visible,
   onClose,
@@ -35,6 +44,7 @@ export const AdminCreateAmenityModal: React.FC<AdminCreateAmenityModalProps> = (
   const [capacity, setCapacity] = useState('20');
   const [operatingHours, setOperatingHours] = useState('06:00 AM - 10:00 PM');
   const [status, setStatus] = useState<'active' | 'maintenance' | 'closed'>('active');
+  const [imageUrl, setImageUrl] = useState('');
 
   useEffect(() => {
     if (editingAmenity) {
@@ -43,12 +53,14 @@ export const AdminCreateAmenityModal: React.FC<AdminCreateAmenityModalProps> = (
       setCapacity(String(editingAmenity.capacity));
       setOperatingHours(editingAmenity.operatingHours || '06:00 AM - 10:00 PM');
       setStatus(editingAmenity.status);
+      setImageUrl(editingAmenity.imageUrl || '');
     } else {
       setName('');
       setDescription('');
       setCapacity('20');
       setOperatingHours('06:00 AM - 10:00 PM');
       setStatus('active');
+      setImageUrl('');
     }
   }, [editingAmenity, visible]);
 
@@ -74,6 +86,7 @@ export const AdminCreateAmenityModal: React.FC<AdminCreateAmenityModalProps> = (
       capacity: parsedCapacity,
       operatingHours: operatingHours.trim(),
       status,
+      imageUrl: imageUrl.trim() || undefined,
     });
   };
 
@@ -106,7 +119,12 @@ export const AdminCreateAmenityModal: React.FC<AdminCreateAmenityModalProps> = (
             </Pressable>
           </View>
 
-          <ScrollView style={styles.formScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.formScroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+          >
             {/* Facility Name */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Facility Name *</Text>
@@ -163,6 +181,59 @@ export const AdminCreateAmenityModal: React.FC<AdminCreateAmenityModalProps> = (
                   />
                 </View>
               </View>
+            </View>
+
+            {/* Facility Image */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Facility Image</Text>
+              <Text variant="caption" style={{ color: '#6B7280', marginBottom: 8 }}>
+                Select a preset image or enter a custom image URL below:
+              </Text>
+              
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={styles.imagePresetsRow}
+              >
+                {PRESET_IMAGES.map((img) => {
+                  const isSelected = imageUrl === img.url;
+                  return (
+                    <Pressable
+                      key={img.label}
+                      style={[
+                        styles.presetCard,
+                        isSelected && styles.presetCardSelected
+                      ]}
+                      onPress={() => {
+                        triggerHaptic();
+                        setImageUrl(img.url);
+                      }}
+                    >
+                      <Image source={{ uri: img.url }} style={styles.presetThumbnail} />
+                      <Text 
+                        variant="caption" 
+                        weight="semibold"
+                        style={[
+                          styles.presetLabel,
+                          isSelected && styles.presetLabelSelected
+                        ]}
+                      >
+                        {img.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              <TextInput
+                style={[styles.textInput, { marginTop: 8 }]}
+                placeholder="Or paste custom image URL (https://...)"
+                placeholderTextColor="#9CA3AF"
+                value={imageUrl}
+                onChangeText={setImageUrl}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
             </View>
 
             {/* Status Select */}
@@ -235,7 +306,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 24,
     paddingTop: 20,
-    maxHeight: '85%',
+    maxHeight: '92%',
+    flex: 0,
+    flexShrink: 1,
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -259,6 +332,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   formScroll: {
+    flexGrow: 1,
+    flexShrink: 1,
     marginBottom: 16,
   },
   inputGroup: {
@@ -339,6 +414,40 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: '#FFF',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  imagePresetsRow: {
+    gap: 10,
+    marginBottom: 8,
+    paddingRight: 20,
+    flexDirection: 'row',
+  },
+  presetCard: {
+    width: 68,
+    height: 68,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  presetCardSelected: {
+    borderColor: '#2E7D32',
+  },
+  presetThumbnail: {
+    width: '100%',
+    height: '65%',
+    resizeMode: 'cover',
+  },
+  presetLabel: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginTop: 1,
+  },
+  presetLabelSelected: {
+    color: '#2E7D32',
     fontWeight: '700',
   },
 });
