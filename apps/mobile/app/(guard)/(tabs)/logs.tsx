@@ -4,7 +4,6 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  ActivityIndicator,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -257,7 +256,7 @@ export default function GuardLogsTab() {
                           style={styles.checkoutBtn}
                         >
                           {checkingOutId === item.id ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
+                            <CustomSpinner size="small" color="#FFFFFF" />
                           ) : (
                             <>
                               <LogOut size={14} color="#FFFFFF" />
