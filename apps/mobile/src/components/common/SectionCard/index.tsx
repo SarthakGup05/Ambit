@@ -115,13 +115,13 @@ export function AppListItem({
           ))}
       </View>
 
-      {valueText && <Text style={uiStyles.valueText}>{valueText}</Text>}
-
-      {rightElement}
-
-      {onPress && !rightElement && !hideChevron && (
-        <ChevronRight size={16} color="#A3A1A8" strokeWidth={2.5} />
-      )}
+      <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0, gap: 4 }}>
+        {valueText && <Text style={uiStyles.valueText}>{valueText}</Text>}
+        {rightElement}
+        {onPress && !rightElement && !hideChevron && (
+          <ChevronRight size={16} color="#A3A1A8" strokeWidth={2.5} />
+        )}
+      </View>
     </View>
   );
 
