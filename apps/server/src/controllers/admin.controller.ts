@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { eq, and, count, gte, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { user, visitors, societies } from "../models/schema.js";
+import { user, visitors, societies, towers, floors, flats } from "../models/schema.js";
 import { auth } from "../auth.js";
 
 /**
@@ -312,3 +312,120 @@ export async function deleteMember(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/**
+ * 🏗️ Get Society Layout
+ */
+export async function getLayout(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.societyId) {
+      return res.status(400).json({ error: "Society association required" });
+    }
+
+    // Fetch all towers for the society
+    const societyTowers = await db
+      .select()
+      .from(towers)
+      .where(eq(towers.societyId, req.societyId));
+
+    if (societyTowers.length === 0) {
+      return res.status(200).json({ layout: [] });
+    }
+
+    const towerIds = societyTowers.map((t) => t.id);
+
+
+    const layout = [];
+    for (const t of societyTowers) {
+      const towerFloors = await db
+        .select()
+        .from(floors)
+        .where(eq(floors.towerId, t.id));
+        
+      const floorsWithFlats = [];
+      for (const f of towerFloors) {
+        const floorFlats = await db
+          .select()
+          .from(flats)
+          .where(eq(flats.floorId, f.id));
+          
+        floorsWithFlats.push({
+          id: f.id,
+          name: f.name,
+          flats: floorFlats.map(flat => ({ id: flat.id, name: flat.name }))
+        });
+      }
+      
+      layout.push({
+        id: t.id,
+        name: t.name,
+        floors: floorsWithFlats,
+      });
+    }
+
+    return res.status(200).json({ layout });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * 🏗️ Save Society Layout (Overwrites current)
+ */
+export async function saveLayout(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (req.user?.role !== "admin" || !req.societyId) {
+      return res.status(403).json({ error: "Forbidden: Admin privileges required" });
+    }
+
+    const { towers: newTowers } = req.body;
+    if (!Array.isArray(newTowers)) {
+      return res.status(400).json({ error: "Invalid payload: expected towers array" });
+    }
+
+    // Use a transaction to ensure all inserts succeed or fail together
+    await db.transaction(async (tx) => {
+      // 1. Delete existing towers (Cascades to floors and flats)
+      await tx
+        .delete(towers)
+        .where(eq(towers.societyId, req.societyId as string));
+
+      // 2. Insert new structure
+      for (const tower of newTowers) {
+        const [insertedTower] = await tx
+          .insert(towers)
+          .values({
+            societyId: req.societyId as string,
+            name: tower.name,
+          })
+          .returning();
+
+        if (!insertedTower) continue;
+
+        for (const floor of tower.floors) {
+          const [insertedFloor] = await tx
+            .insert(floors)
+            .values({
+              towerId: insertedTower.id,
+              name: floor.name,
+            })
+            .returning();
+
+          if (!insertedFloor) continue;
+
+          if (floor.flats && floor.flats.length > 0) {
+            const flatsToInsert = floor.flats.map((flat: any) => ({
+              floorId: insertedFloor.id,
+              name: flat.name,
+            }));
+            
+            await tx.insert(flats).values(flatsToInsert);
+          }
+        }
+      }
+    });
+
+    return res.status(200).json({ message: "Layout saved successfully" });
+  } catch (error) {
+    next(error);
+  }
+}

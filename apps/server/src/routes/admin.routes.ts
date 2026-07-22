@@ -9,6 +9,8 @@ import {
   createMember,
   updateMember,
   deleteMember,
+  getLayout,
+  saveLayout,
 } from "../controllers/admin.controller.js";
 import {
   getAmenities,
@@ -58,5 +60,10 @@ router.post("/amenities", createAmenity);
 router.put("/amenities/:id", updateAmenity);
 router.delete("/amenities/:id", deleteAmenity);
 
-export default router;
+/**
+ * 🏗️ Manage Society Layout (Towers, Floors, Flats)
+ */
+router.get("/layout", getLayout);
+router.post("/layout", saveLayout);
 
+export default router;
