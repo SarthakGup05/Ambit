@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, useToast, AppEmptyState } from '@/components/common';
+import { ScreenBackground, AppSectionCard, useToast, AppEmptyState, CustomSpinner } from '@/components/common';
 import { type, uiStyles } from '@/theme';
 import { VisitorService, Visitor } from '@/services/VisitorService';
 import { useVisitorStore } from '@/store';

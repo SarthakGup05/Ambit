@@ -9,6 +9,7 @@ import {
 import { Text } from '@repo/ui';
 import { Lock, Mail, User, Eye, EyeOff, Key } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { CustomSpinner } from '@/components/common';
 
 interface RegisterFormProps {
   signupMode: 'admin' | 'invite';

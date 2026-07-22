@@ -6,6 +6,7 @@ import { useAuth } from "../../src/features/auth/hooks/useAuth";
 import { Lock, Mail, Eye, EyeOff, Apple, User } from "lucide-react-native";
 import Svg, { Path } from "react-native-svg";
 import Animated, { FadeInUp } from "react-native-reanimated";
+import { CustomSpinner } from "@/components/common";
 
 // Custom Google Icon
 function GoogleIcon() {

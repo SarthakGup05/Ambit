@@ -11,6 +11,7 @@ import { AlertTriangle, Clock, X, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { api } from '@/lib/axios';
 import { sharedStyles } from './bulletinFormStyles';
+import { CustomSpinner } from '@/components/common';
 
 function triggerHaptic() {
   try {

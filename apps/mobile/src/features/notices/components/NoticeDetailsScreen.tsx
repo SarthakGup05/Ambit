@@ -25,6 +25,7 @@ import Animated, {
   SlideInDown,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CustomSpinner } from '@/components/common';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

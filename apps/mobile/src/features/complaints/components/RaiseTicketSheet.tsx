@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { ComplaintCategory, ComplaintPriority, CreateComplaintInput } from '../types';
+import { CustomSpinner } from '@/components/common';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

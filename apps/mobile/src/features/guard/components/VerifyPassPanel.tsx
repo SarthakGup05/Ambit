@@ -8,7 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import { Text } from '@repo/ui';
-import { AppSectionCard } from '@/components/common';
+import { AppSectionCard, CustomSpinner } from '@/components/common';
 import { CameraView } from 'expo-camera';
 import { QrCode, Sparkles } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';

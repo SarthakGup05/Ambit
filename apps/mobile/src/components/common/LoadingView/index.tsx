@@ -1,5 +1,7 @@
 import React from 'react';
-import { View} from 'react-native';
+import { View } from 'react-native';
+import { CustomSpinner } from '../CustomSpinner';
+
 export function LoadingView() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAF8F5' }}>

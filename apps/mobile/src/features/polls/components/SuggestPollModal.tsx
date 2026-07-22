@@ -13,6 +13,7 @@ import {
 import { Text } from '@repo/ui';
 import { Megaphone, X, Check, Sparkles, Send } from 'lucide-react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
+import { CustomSpinner } from '@/components/common';
 
 interface SuggestPollModalProps {
   isVisible: boolean;

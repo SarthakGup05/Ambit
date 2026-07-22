@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Screen, Text } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, BadgeIconWrapper, CustomSpinner } from '@/components/common';
 import { type, uiStyles } from '@/theme';
 import { useRouter } from 'expo-router';
 import { VisitorService, Visitor, VisitorStats } from '@/services/VisitorService';

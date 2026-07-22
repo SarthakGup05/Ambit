@@ -10,7 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Screen, Text } from '@repo/ui';
-import { ScreenBackground, StatusModal } from '@/components/common';
+import { ScreenBackground, StatusModal, CustomSpinner } from '@/components/common';
 import {
   ArrowLeft,
   Building2,
