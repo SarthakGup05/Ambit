@@ -54,7 +54,7 @@ export default function AdminProfileTab() {
       <ScreenBackground />
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <ScrollView
-          contentContainerStyle={[uiStyles.scroll, { paddingTop: 40, paddingBottom: 140 }]}
+          contentContainerStyle={[uiStyles.scroll, { paddingTop: 24, paddingBottom: 140 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Brand Header */}
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
-    elevation: 3,
+    elevation: Platform.OS === 'android' ? 0 : 3,
   },
   avatarContainer: {
     width: 68,

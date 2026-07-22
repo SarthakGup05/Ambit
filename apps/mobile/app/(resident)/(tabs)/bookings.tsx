@@ -12,7 +12,17 @@ import {
 import { Screen, Text, ListSkeleton } from '@repo/ui';
 import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
 import { uiStyles, type } from '@/theme';
-import { Calendar as CalendarIcon, Sparkles } from 'lucide-react-native';
+import {
+  Calendar as CalendarIcon,
+  Sparkles,
+  Waves,
+  Dumbbell,
+  Trophy,
+  Coffee,
+  Gamepad2,
+  TreePine,
+  Briefcase,
+} from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,6 +53,84 @@ const FALLBACK_BOOKINGS: Booking[] = [
     createdAt: new Date().toISOString(),
   },
 ];
+
+export function getAmenityIconConfig(name: string) {
+  const lowercaseName = name.toLowerCase();
+  
+  if (lowercaseName.includes('pool') || lowercaseName.includes('swim')) {
+    return {
+      Icon: Waves,
+      color: '#0284C7',
+      bgColor: 'rgba(2, 132, 199, 0.08)',
+    };
+  }
+  if (lowercaseName.includes('gym') || lowercaseName.includes('fitness') || lowercaseName.includes('workout')) {
+    return {
+      Icon: Dumbbell,
+      color: '#7C3AED',
+      bgColor: 'rgba(124, 58, 237, 0.08)',
+    };
+  }
+  if (
+    lowercaseName.includes('tennis') ||
+    lowercaseName.includes('court') ||
+    lowercaseName.includes('badminton') ||
+    lowercaseName.includes('sport') ||
+    lowercaseName.includes('squash')
+  ) {
+    return {
+      Icon: Trophy,
+      color: '#DD6B20',
+      bgColor: 'rgba(221, 107, 32, 0.08)',
+    };
+  }
+  if (
+    lowercaseName.includes('club') ||
+    lowercaseName.includes('lounge') ||
+    lowercaseName.includes('party') ||
+    lowercaseName.includes('hall') ||
+    lowercaseName.includes('community')
+  ) {
+    return {
+      Icon: Coffee,
+      color: '#DB2777',
+      bgColor: 'rgba(219, 39, 119, 0.08)',
+    };
+  }
+  if (lowercaseName.includes('play') || lowercaseName.includes('game') || lowercaseName.includes('kids')) {
+    return {
+      Icon: Gamepad2,
+      color: '#2563EB',
+      bgColor: 'rgba(37, 99, 235, 0.08)',
+    };
+  }
+  if (lowercaseName.includes('garden') || lowercaseName.includes('park') || lowercaseName.includes('lawn') || lowercaseName.includes('green')) {
+    return {
+      Icon: TreePine,
+      color: '#16A34A',
+      bgColor: 'rgba(22, 163, 74, 0.08)',
+    };
+  }
+  if (
+    lowercaseName.includes('work') ||
+    lowercaseName.includes('conference') ||
+    lowercaseName.includes('meeting') ||
+    lowercaseName.includes('office') ||
+    lowercaseName.includes('study')
+  ) {
+    return {
+      Icon: Briefcase,
+      color: '#4B5563',
+      bgColor: 'rgba(75, 85, 99, 0.08)',
+    };
+  }
+  
+  return {
+    Icon: Sparkles,
+    color: '#0D9488',
+    bgColor: 'rgba(13, 148, 136, 0.08)',
+  };
+}
 
 function triggerHaptic() {
   try {
@@ -185,12 +273,13 @@ export default function BookingsTab() {
                         minute: '2-digit',
                       })}`;
 
+                      const config = getAmenityIconConfig(bk.amenityName);
                       return (
                         <AppListItem
                           key={bk.id}
-                          Icon={CalendarIcon}
-                          iconColor="#2E7D32"
-                          iconBg="rgba(46, 125, 50, 0.1)"
+                          Icon={config.Icon}
+                          iconColor={config.color}
+                          iconBg={config.bgColor}
                           title={bk.amenityName}
                           subtitle={`${dateStr} · ${timeStr}`}
                           rightElement={
@@ -223,16 +312,21 @@ export default function BookingsTab() {
                       description="There are no amenities configured for booking in this society yet."
                     />
                   ) : (
-                    amenities.map((item, idx) => (
-                      <AppListItem
-                        key={item.id}
-                        Icon={Sparkles}
-                        title={item.name}
-                        subtitle={`${item.description} (Capacity: ${item.capacity} guests)`}
-                        onPress={() => handleOpenBooking(item)}
-                        isLast={idx === amenities.length - 1}
-                      />
-                    ))
+                    amenities.map((item, idx) => {
+                      const config = getAmenityIconConfig(item.name);
+                      return (
+                        <AppListItem
+                          key={item.id}
+                          Icon={config.Icon}
+                          iconColor={config.color}
+                          iconBg={config.bgColor}
+                          title={item.name}
+                          subtitle={`${item.description} (Capacity: ${item.capacity} guests)`}
+                          onPress={() => handleOpenBooking(item)}
+                          isLast={idx === amenities.length - 1}
+                        />
+                      );
+                    })
                   )}
                 </AppSectionCard>
               </Animated.View>

@@ -74,7 +74,7 @@ export default function ResidentProfileTab() {
         <ScrollView
           contentContainerStyle={uiStyles.scroll}
           showsVerticalScrollIndicator={false}
-          style={{ paddingTop: 40, paddingBottom: 140 }}
+          style={{ paddingTop: 24, paddingBottom: 140 }}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
-    elevation: 3,
+    elevation: Platform.OS === 'android' ? 0 : 3,
   },
   avatarContainer: {
     width: 68,
