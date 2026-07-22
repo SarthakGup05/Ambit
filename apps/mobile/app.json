@@ -22,7 +22,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sarthak_dev.mobile"
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +32,15 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1b3ccf13-4312-4def-a22f-a662aa87cb3e"
+      }
+    },
+    "owner": "sarthak_dev"
   }
 }
