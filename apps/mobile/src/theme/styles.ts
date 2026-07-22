@@ -134,7 +134,7 @@ export const uiStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.05,
     shadowRadius: 16,
-    elevation: 3,
+    elevation: Platform.OS === 'android' ? 0 : 3,
   },
 
   // ─── List Row ─────────────────────────────────────────────────────────────
