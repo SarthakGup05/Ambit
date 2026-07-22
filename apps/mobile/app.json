@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "Ambit",
     "slug": "mobile",
     "scheme": "ambit",
     "version": "1.0.0",
@@ -14,7 +14,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sarthak_dev.mobile"
     },
     "android": {
       "adaptiveIcon": {
