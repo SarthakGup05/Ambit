@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, FlatList, TextInput, Pressable, Platform, ActivityIndicator, RefreshControl } from 'react-native';
+import { CustomSpinner } from '@/components/common';
+import { View, StyleSheet, FlatList, TextInput, Pressable, Platform, RefreshControl } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
 import { ScreenBackground, AppEmptyState } from '@/components/common';
 import { useRouter } from 'expo-router';
