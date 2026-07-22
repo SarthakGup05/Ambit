@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Pressable, ScrollView, StyleSheet, Platform } from 'react-native';
 import { Text } from '@repo/ui';
 import { ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { NOTICES } from '../../notices/data';
-import { getNoticeIcon } from '../../notices/components/NoticesScreen';
+import { getNoticeIcon } from '../../notices/components/NoticeCard';
 import Animated, { FadeIn, FadeInUp, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.07,
     shadowRadius: 18,
-    elevation: 4,
+    elevation: Platform.OS === 'android' ? 0 : 4,
   },
   cardHeader: {
     flexDirection: 'row',

@@ -156,7 +156,7 @@ export function Overview() {
         <ScrollView
           contentContainerStyle={[
             uiStyles.scroll,
-            { paddingTop: insets.top + 12, paddingBottom: 120 },
+            { paddingTop: 12, paddingBottom: 120 },
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
