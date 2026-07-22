@@ -195,7 +195,7 @@ export default function GuardLogsTab() {
 
                       <View style={{ flex: 1, marginLeft: 12 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text variant="body" weight="bold" style={{ color: '#11111E' }}>
+                          <Text variant="body" weight="bold" numberOfLines={1} style={{ color: '#11111E', flex: 1, marginRight: 8 }}>
                             {item.name}
                           </Text>
                           <View
