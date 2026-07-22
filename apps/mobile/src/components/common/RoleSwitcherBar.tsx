@@ -5,8 +5,11 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export function RoleSwitcherBar() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, setAuth, token } = useAuthStore();
 
   if (!__DEV__ || !user) {
@@ -39,7 +42,7 @@ export function RoleSwitcherBar() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { top: Math.max(insets.top + 4, 38) }]}>
       <Text style={styles.label}>DEV ROLE:</Text>
       {(['resident', 'admin', 'guard'] as const).map((r) => {
         const isActive = user.role === r;
