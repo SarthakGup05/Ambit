@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copy lockfile and package configs first to cache dependencies install
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/api/package.json ./apps/api/
+COPY apps/server/package.json ./apps/server/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/ui/package.json ./packages/ui/

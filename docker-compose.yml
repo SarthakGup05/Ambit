@@ -17,7 +17,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
+      dockerfile: apps/server/Dockerfile
     container_name: ambit-api
     restart: always
     ports:
@@ -31,7 +31,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/apps/api/node_modules
+      - /app/apps/server/node_modules
       - /app/packages/eslint-config/node_modules
       - /app/packages/typescript-config/node_modules
       - /app/packages/ui/node_modules
