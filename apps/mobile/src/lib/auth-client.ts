@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import * as SecureStore from "expo-secure-store";
-import type { auth } from "../../../api/src/auth";
+import type { auth } from "../../../server/src/auth.js";
 
 import Constants from "expo-constants";
 

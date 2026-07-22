@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Pressable,
   TextInput,
-  ActivityIndicator,
   Text as RNText,
 } from 'react-native';
 import { Text } from '@repo/ui';
@@ -149,7 +148,7 @@ export function RegisterForm({
         {/* Submit */}
         <Pressable onPress={onSubmit} disabled={isLoading} style={styles.submitBtn}>
           {isLoading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <CustomSpinner color="#FFFFFF" size="small" />
           ) : (
             <RNText style={styles.submitBtnText}>
               {signupMode === 'admin' ? 'Create Admin Account' : 'Join Society'}
