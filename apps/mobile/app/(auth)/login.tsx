@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, KeyboardAvoidingView, Platform, ScrollView, TextInput, ActivityIndicator, Text as RNText } from "react-native";
+import { View, StyleSheet, Pressable, KeyboardAvoidingView, Platform, ScrollView, TextInput, Text as RNText } from "react-native";
 import { Screen, Text, Button } from "@repo/ui";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/features/auth/hooks/useAuth";
@@ -124,7 +124,7 @@ export default function LoginScreen() {
                 className="w-full h-[52px] rounded-[26px] bg-[#11111E] active:bg-[#2E2E3A] justify-center items-center mt-2"
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <CustomSpinner color="#FFFFFF" size="small" />
                 ) : (
                   <RNText className="text-white font-bold text-[15px]">Login</RNText>
                 )}
