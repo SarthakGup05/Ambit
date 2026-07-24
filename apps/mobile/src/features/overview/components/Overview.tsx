@@ -32,6 +32,7 @@ import { Booking } from '@/features/bookings/api';
 import { useNotificationStore } from '@/store/notification.store';
 import { OverviewService, Notice } from '@/services/OverviewService';
 import { NotificationService, NotificationItem } from '@/services/NotificationService';
+import { VisitorService } from '@/services/VisitorService';
 
 const QUICK_ACTIONS = [
   {
@@ -39,7 +40,6 @@ const QUICK_ACTIONS = [
     title: 'Visitor Approvals',
     subtitle: 'Review & approve guests',
     Icon: UserCheck,
-    badge: 2,
     route: '/(resident)/visitor-approvals' as const,
   },
   {
@@ -107,21 +107,26 @@ export function Overview() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notificationsList, setNotificationsList] = useState<NotificationItem[]>([]);
+  const [pendingVisitorCount, setPendingVisitorCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
   const greeting = getGreeting();
 
   const loadDashboard = useCallback(async () => {
     try {
-      const [noticesList, bookingsList, notifsList] = await Promise.all([
+      const [noticesList, bookingsList, notifsList, visitorsList] = await Promise.all([
         OverviewService.getNotices(),
         OverviewService.getBookings().catch(() => []),
         NotificationService.getNotifications().catch(() => []),
+        VisitorService.getFlatVisitors().catch(() => []),
       ]);
 
       setNotices(noticesList);
       setBookings(bookingsList);
       setNotificationsList(notifsList);
+      
+      const pending = visitorsList.filter(v => v.status === 'pending').length;
+      setPendingVisitorCount(pending);
 
       const count = (notifsList || []).filter((n) => !n.isRead).length;
       setUnreadCount(count);
@@ -210,7 +215,7 @@ export function Overview() {
                   Icon={action.Icon}
                   title={action.title}
                   subtitle={action.subtitle}
-                  badge={action.badge}
+                  badge={action.id === 'approvals' && pendingVisitorCount > 0 ? pendingVisitorCount : undefined}
                   onPress={() => {
                     if (action.route) router.push(action.route);
                   }}
