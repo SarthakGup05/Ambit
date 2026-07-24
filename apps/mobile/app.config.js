@@ -1,29 +1,22 @@
-const APP_ENV = process.env.APP_ENV || 'development';
-const IS_DEV = APP_ENV === 'development';
-const IS_PREVIEW = APP_ENV === 'preview';
-
 module.exports = {
   expo: {
-    name: IS_DEV ? "Ambit Dev" : IS_PREVIEW ? "Ambit Preview" : "Ambit",
+    name: "Ambit",
     slug: "mobile",
-    scheme: IS_DEV ? "ambit-dev" : IS_PREVIEW ? "ambit-preview" : "ambit",
+    scheme: "ambit",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
-      image: "./assets/ambit_logo.png",
+      image: "./assets/splash-custom.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#0d3a2a"
     },
+
     ios: {
       supportsTablet: true,
-      bundleIdentifier: IS_DEV 
-        ? "com.sarthak_dev.mobile.dev" 
-        : IS_PREVIEW 
-        ? "com.sarthak_dev.mobile.preview" 
-        : "com.sarthak_dev.mobile"
+      bundleIdentifier: "com.sarthak_dev.mobile"
     },
     android: {
       adaptiveIcon: {
@@ -32,11 +25,8 @@ module.exports = {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package: IS_DEV 
-        ? "com.sarthak_dev.mobile.dev" 
-        : IS_PREVIEW 
-        ? "com.sarthak_dev.mobile.preview" 
-        : "com.sarthak_dev.mobile"
+      package: "com.sarthak_dev.mobile",
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json"
     },
     web: {
       bundler: "metro",
@@ -46,7 +36,8 @@ module.exports = {
       "expo-router",
       "expo-font",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications"
     ],
     extra: {
       router: {},
