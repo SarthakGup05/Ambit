@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { societies, user } from "../models/schema.js";
+import { societies, user, towers } from "../models/schema.js";
 import { auth } from "../auth.js";
 
 // Helper to generate a unique 6-character society invite code
@@ -36,7 +36,7 @@ async function generateUniqueInviteCode(): Promise<string> {
  */
 export async function adminOnboard(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, address } = req.body;
+    const { name, address, adminFlatNumber, towersCount } = req.body;
 
     if (!name || !address) {
       return res.status(400).json({ error: "Society name and address are required" });
@@ -70,9 +70,20 @@ export async function adminOnboard(req: Request, res: Response, next: NextFuncti
         .set({
           societyId: newSociety.id,
           role: "admin",
+          flatNumber: adminFlatNumber?.trim() ?? null,
         })
         .where(eq(user.id, req.user!.id))
         .returning();
+
+      // 3. Auto-generate towers if towersCount is provided
+      const numTowers = Number(towersCount) || 0;
+      if (numTowers > 0) {
+        const towerNames = Array.from({ length: numTowers }, (_, i) => ({
+          societyId: newSociety.id,
+          name: `Tower ${String.fromCharCode(65 + i)}`, // Tower A, Tower B...
+        }));
+        await tx.insert(towers).values(towerNames);
+      }
 
       return { society: newSociety, user: updatedUser };
     });
