@@ -63,6 +63,7 @@ export const auth = betterAuth({
       },
     },
   },
+  advanced: {},
   trustedOrigins: (request) => {
     const origins = ["ambit://"];
     const origin = request?.headers?.get("origin");
