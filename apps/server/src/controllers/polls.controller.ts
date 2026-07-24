@@ -12,53 +12,11 @@ export async function getPolls(req: Request, res: Response, next: NextFunction) 
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    let list = await db
+    const list = await db
       .select()
       .from(polls)
       .where(eq(polls.societyId, req.societyId))
       .orderBy(desc(polls.createdAt));
-
-    // Seed default community polls if empty
-    if (list.length === 0) {
-      const now = new Date();
-      const addTime = (days: number, hours: number) => {
-        const d = new Date(now);
-        d.setDate(d.getDate() + days);
-        d.setHours(d.getHours() + hours);
-        return d;
-      };
-
-      const defaults = [
-        {
-          question: "Should we upgrade the children's play area?",
-          options: ["Yes, I support this", "No, not needed right now", "I'm not sure"],
-          expiresAt: addTime(2, 14),
-        },
-        {
-          question: "Should we implement visitor parking charges?",
-          options: ["Yes", "No"],
-          expiresAt: addTime(5, 8),
-        },
-        {
-          question: "Should we install RO plants in the society?",
-          options: ["Yes", "No"],
-          expiresAt: addTime(7, 12),
-        },
-      ];
-
-      await db.insert(polls).values(
-        defaults.map((p) => ({
-          societyId: req.societyId!,
-          ...p,
-        }))
-      );
-
-      list = await db
-        .select()
-        .from(polls)
-        .where(eq(polls.societyId, req.societyId))
-        .orderBy(desc(polls.createdAt));
-    }
 
     // Map each poll and append user vote status & option tallies
     const formattedPolls = await Promise.all(
@@ -87,6 +45,7 @@ export async function getPolls(req: Request, res: Response, next: NextFunction) 
           options: p.options,
           expiresAt: p.expiresAt,
           createdAt: p.createdAt,
+          isFeatured: p.isFeatured,
           userVotedOption: userVote?.option || null,
           results: voteTallies,
           totalVotes: voteTallies.reduce((sum, current) => sum + current.votes, 0),
@@ -165,7 +124,7 @@ export async function createPoll(req: Request, res: Response, next: NextFunction
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const { question, options, expiresInDays } = req.body;
+    const { question, options, expiresInDays, isFeatured } = req.body;
 
     if (!question || typeof question !== "string" || question.trim().length === 0) {
       return res.status(400).json({ error: "Poll question is required" });
@@ -177,6 +136,15 @@ export async function createPoll(req: Request, res: Response, next: NextFunction
 
     const days = typeof expiresInDays === "number" && expiresInDays > 0 ? expiresInDays : 7;
     const expiresAt = new Date(Date.now() + days * 86400000);
+    const featured = isFeatured === true;
+
+    // If marking as featured, unfeature any existing featured poll for this society
+    if (featured) {
+      await db
+        .update(polls)
+        .set({ isFeatured: false })
+        .where(and(eq(polls.societyId, req.societyId), eq(polls.isFeatured, true)));
+    }
 
     const [newPoll] = await db
       .insert(polls)
@@ -185,6 +153,7 @@ export async function createPoll(req: Request, res: Response, next: NextFunction
         question: question.trim(),
         options: options.map((opt: string) => String(opt).trim()).filter(Boolean),
         expiresAt,
+        isFeatured: featured,
       })
       .returning();
 

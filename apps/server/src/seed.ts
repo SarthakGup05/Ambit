@@ -1,6 +1,6 @@
 import "./env.js"; // Initialize env first
 import { db } from "./db/index.js";
-import { societies, user, notices, visitors, complaints, amenities, bookings } from "./models/schema.js";
+import { societies, user, notices, visitors, complaints, amenities, bookings, polls } from "./models/schema.js";
 import { auth } from "./auth.js";
 import { eq, sql } from "drizzle-orm";
 
@@ -120,7 +120,37 @@ async function seed() {
         }
       ]);
 
-      // 4. Seed Visitor Logs
+      // 4. Seed Community Polls
+      console.log("🗳️ Seeding community polls...");
+      // Delete votes first to satisfy FK constraint (poll_votes.poll_id -> polls.id)
+      await db.execute(
+        sql`DELETE FROM poll_votes WHERE poll_id IN (SELECT id FROM polls WHERE society_id = ${society.id})`
+      );
+      await db.delete(polls).where(eq(polls.societyId, society.id));
+      const now = new Date();
+      const addDays = (days: number) => new Date(now.getTime() + days * 86400000);
+      await db.insert(polls).values([
+        {
+          societyId: society.id,
+          question: "Should we upgrade the children's play area?",
+          options: ["Yes, I support this", "No, not needed right now", "I'm not sure"],
+          expiresAt: addDays(3),
+        },
+        {
+          societyId: society.id,
+          question: "Should we implement visitor parking charges?",
+          options: ["Yes", "No"],
+          expiresAt: addDays(5),
+        },
+        {
+          societyId: society.id,
+          question: "Should we install RO plants in the society?",
+          options: ["Yes", "No"],
+          expiresAt: addDays(7),
+        },
+      ]);
+
+      // 5. Seed Visitor Logs
       console.log("📋 Seeding visitor entry logs...");
       await db.delete(visitors).where(eq(visitors.societyId, society.id));
       await db.insert(visitors).values([
