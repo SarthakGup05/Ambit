@@ -13,7 +13,6 @@ import { type, uiStyles } from '@/theme';
 import { useRouter } from 'expo-router';
 import { useNotificationStore } from '@/store';
 import {
-  Menu,
   Bell,
   Users,
   Building2,
@@ -198,9 +197,7 @@ export default function AdminHomeTab() {
         >
           {/* Header */}
           <Animated.View entering={FadeIn.duration(300)} style={uiStyles.header}>
-            <Pressable onPress={triggerHaptic} style={uiStyles.iconBtn} hitSlop={12}>
-              <Menu size={24} color="#11111E" strokeWidth={2.2} />
-            </Pressable>
+            <View style={{ width: 46 }} />
             <Text variant="h3" weight="bold" style={type.navTitle}>
               Admin Dashboard
             </Text>
