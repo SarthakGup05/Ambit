@@ -37,3 +37,5 @@ yarn-error.log*
 .DS_Store
 *.pem
 .checklist.md
+apps/mobile/google-services.json
+apps/mobile/ambit-fa202-firebase-adminsdk-fbsvc-73630c77f6.json
