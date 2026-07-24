@@ -31,4 +31,11 @@ export class NotificationService {
   static async markAllAsRead(): Promise<void> {
     await api.post('/api/notifications/read-all');
   }
+
+  /**
+   * 📲 Register client push token on the server
+   */
+  static async registerPushToken(token: string): Promise<void> {
+    await api.post('/api/notifications/register-token', { token });
+  }
 }
