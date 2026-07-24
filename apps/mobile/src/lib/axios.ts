@@ -4,14 +4,13 @@ import Constants from 'expo-constants';
 
 const getLocalDevUrl = () => {
   const hostUri = Constants.expoConfig?.hostUri;
-  if (!hostUri) return "http://localhost:3001";
+  if (!hostUri) return "http://localhost:8080";
   const ip = hostUri.split(":")[0];
-  return `http://${ip}:3001`;
+  return `http://${ip}:8080`;
 };
 
 export const api = axios.create({
-  // Use port 3001 as default since our backend runs on 3001
-  baseURL: process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? getLocalDevUrl() : 'http://localhost:3001'),
+  baseURL: process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? getLocalDevUrl() : 'http://localhost:8080'),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

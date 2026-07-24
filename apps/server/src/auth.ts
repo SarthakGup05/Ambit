@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin } from "better-auth/plugins";
+import { admin, bearer } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 import { APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
@@ -90,5 +90,6 @@ export const auth = betterAuth({
   plugins: [
     admin(),
     expo(),
+    bearer(),
   ],
 });
