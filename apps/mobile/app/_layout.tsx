@@ -6,7 +6,14 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } f
 import { useEffect, useState } from "react";
 import { useAuth } from "../src/features/auth/hooks/useAuth";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { RoleSwitcherBar, ToastProvider } from "../src/components/common";
+import { RoleSwitcherBar, ToastProvider, SplashScreen } from "../src/components/common";
+import { registerForPushNotificationsAsync, setupNotificationListeners } from "../src/services/notifications/PushNotificationSetup";
+import * as ExpoSplashScreen from 'expo-splash-screen';
+
+// Prevent the native splash screen from hiding automatically until our custom JS splash screen is ready
+ExpoSplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore if it's already preventing
+});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -21,11 +28,16 @@ export default function RootLayout() {
 
   const { initializeAuth } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isSplashAnimationComplete, setIsSplashAnimationComplete] = useState(false);
 
   useEffect(() => {
     async function restoreSession() {
       try {
         await initializeAuth();
+        // Register push token after restoring session
+        registerForPushNotificationsAsync().catch((err) =>
+          console.error("Push notification setup failed:", err)
+        );
       } catch (err) {
         console.error("Failed to restore session on boot", err);
       } finally {
@@ -33,18 +45,29 @@ export default function RootLayout() {
       }
     }
     restoreSession();
+
+    const cleanup = setupNotificationListeners();
+    return () => cleanup();
   }, [initializeAuth]);
 
-  if (!fontsLoaded || isInitializing) {
-    return null;
-  }
+  const isReady = fontsLoaded && !isInitializing;
 
   return (
     <SafeAreaProvider>
       <ToastProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-        <RoleSwitcherBar />
+        {isReady && (
+          <>
+            <Stack screenOptions={{ headerShown: false }} />
+            <RoleSwitcherBar />
+          </>
+        )}
       </ToastProvider>
+      {!isSplashAnimationComplete && (
+        <SplashScreen 
+          isReady={isReady} 
+          onAnimationComplete={() => setIsSplashAnimationComplete(true)} 
+        />
+      )}
     </SafeAreaProvider>
   );
 }

@@ -17,3 +17,4 @@ export type { AppEmptyStateProps } from './EmptyState';
 export { StatusModal } from './StatusModal';
 
 export * from './CustomSpinner';
+export { SplashScreen } from './SplashScreen';

@@ -1,13 +1,24 @@
+import React, { useEffect } from 'react';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { Text } from '@repo/ui';
 import { type } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useNotificationStore } from '@/store/notification.store';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
 
-const ACTIVE = '#2E7D32';
-const INACTIVE = '#9CA3AF';
+// ─── Color Tokens ─────────────────────────────────────────────────────────────
+const BAR_BG     = '#F8F7F4';              // off-white pill
+const ACTIVE_CLR = '#2E7D32';             // app's primary green
+const INACTIVE   = '#9CA3AF';             // muted grey
+const GLOW_BG    = 'rgba(46,125,50,0.10)'; // soft green spotlight behind active icon
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 type TabIcon = React.ComponentType<{
   size?: number;
   color?: string;
@@ -27,9 +38,79 @@ type Props = {
   tabs: RoleTabConfig[];
 };
 
+// ─── Individual Animated Tab Item ─────────────────────────────────────────────
+function TabItem({
+  tab,
+  isFocused,
+  onPress,
+  showBadge,
+  badgeCount,
+}: {
+  tab: RoleTabConfig;
+  isFocused: boolean;
+  onPress: () => void;
+  showBadge: boolean;
+  badgeCount: number;
+}) {
+  const glowOpacity = useSharedValue(isFocused ? 1 : 0);
+
+  const { Icon } = tab;
+  const color = isFocused ? ACTIVE_CLR : INACTIVE;
+
+  // Sync glow when focus changes
+  useEffect(() => {
+    glowOpacity.value = withTiming(isFocused ? 1 : 0, { duration: 220 });
+  }, [isFocused]);
+
+  const animatedGlowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+    transform: [
+      { scale: interpolate(glowOpacity.value, [0, 1], [0.7, 1]) },
+    ],
+  }));
+
+  return (
+    <Pressable onPress={onPress} style={styles.item}>
+      {/* Icon wrapper — fixed 46×46 so glow and icon share the same center */}
+      <View style={styles.iconWrapper}>
+        {/* Glow: absolute fill within iconWrapper, perfectly centered */}
+        <Animated.View style={[StyleSheet.absoluteFill, styles.glow, animatedGlowStyle]} />
+
+        {/* Icon */}
+        <Icon
+          size={22}
+          color={color}
+          strokeWidth={isFocused ? 2.4 : 1.8}
+          fill={isFocused ? GLOW_BG : 'transparent'}
+        />
+
+        {/* Notification badge */}
+        {showBadge && badgeCount > 0 && (
+          <View style={styles.badgeContainer}>
+            <Text style={styles.badgeText}>{badgeCount}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Label */}
+      <Text
+        variant="caption"
+        weight={isFocused ? 'bold' : 'normal'}
+        style={[
+          type.tab,
+          { color, fontWeight: isFocused ? '700' : '500', letterSpacing: isFocused ? 0.1 : 0 },
+        ]}
+      >
+        {tab.label}
+      </Text>
+    </Pressable>
+  );
+}
+
+// ─── Tab Bar ──────────────────────────────────────────────────────────────────
 export function RoleTabBar({ state, navigation, tabs }: Props) {
   const insets = useSafeAreaInsets();
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   const triggerHaptic = () => {
     try {
@@ -39,27 +120,19 @@ export function RoleTabBar({ state, navigation, tabs }: Props) {
     }
   };
 
+  const bottomOffset = Platform.OS === 'android'
+    ? Math.max(insets.bottom + 4, 10)
+    : Math.max(insets.bottom, 8);
+
   return (
-    <View
-      style={[
-        styles.wrap,
-        {
-          paddingBottom:
-            Platform.OS === 'android'
-              ? Math.max(insets.bottom, 14)
-              : Math.max(insets.bottom, 10),
-        },
-      ]}
-    >
-      <View style={styles.bar}>
+    <View style={[styles.wrap, { bottom: bottomOffset }]}>
+      <View style={styles.pill}>
         {tabs.map((tab) => {
           const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
           if (routeIndex === -1) return null;
 
           const route = state.routes[routeIndex];
           const isFocused = state.index === routeIndex;
-          const color = isFocused ? ACTIVE : INACTIVE;
-          const { Icon } = tab;
 
           const onPress = () => {
             triggerHaptic();
@@ -74,29 +147,14 @@ export function RoleTabBar({ state, navigation, tabs }: Props) {
           };
 
           return (
-            <Pressable key={tab.name} onPress={onPress} style={styles.item}>
-              <View style={styles.iconContainer}>
-                <Icon
-                  size={22}
-                  color={color}
-                  strokeWidth={isFocused ? 2.4 : 2}
-                  fill={isFocused ? color : 'transparent'}
-                />
-                {tab.name === 'notifications' && unreadCount > 0 && (
-                  <View style={styles.badgeContainer}>
-                    <Text style={styles.badgeText}>{unreadCount}</Text>
-                  </View>
-                )}
-              </View>
-              <Text
-                variant="caption"
-                weight="semibold"
-                style={[type.tab, { color }]}
-              >
-                {tab.label}
-              </Text>
-              {isFocused && <View style={styles.dot} />}
-            </Pressable>
+            <TabItem
+              key={tab.name}
+              tab={tab}
+              isFocused={isFocused}
+              onPress={onPress}
+              showBadge={tab.name === 'notifications'}
+              badgeCount={unreadCount}
+            />
           );
         })}
       </View>
@@ -107,57 +165,57 @@ export function RoleTabBar({ state, navigation, tabs }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 8,
+    left: 16,
+    right: 16,
+    alignItems: 'center',
   },
-  bar: {
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingTop: 10,
-    minHeight: 56,
+    backgroundColor: BAR_BG,
+    borderRadius: 32,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    width: '100%',
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
+    elevation: 12,
   },
   item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 2,
+    paddingVertical: 1,
+    gap: 1,
   },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: ACTIVE,
-    marginTop: 2,
-  },
-  iconContainer: {
-    position: 'relative',
+  // Fixed 38×38 container shared by both the glow and the icon
+  iconWrapper: {
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 24,
-    height: 24,
+  },
+  glow: {
+    borderRadius: 19,
+    backgroundColor: GLOW_BG,
   },
   badgeContainer: {
     position: 'absolute',
     top: -5,
     right: -8,
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#EF4444',
     borderRadius: 8,
     minWidth: 16,
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: BAR_BG,
   },
   badgeText: {
     color: '#FFFFFF',

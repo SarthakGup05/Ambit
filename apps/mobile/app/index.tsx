@@ -1,12 +1,10 @@
 import { Redirect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "../src/store/auth.store";
-import { AnimatedSplash } from "../src/features/auth/components/AnimatedSplash";
 import { storage } from "../src/lib/storage";
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean | null>(null);
   const { token, user } = useAuthStore();
 
@@ -23,10 +21,6 @@ export default function Home() {
 
   if (!isMounted || hasSeenWelcome === null) {
     return null;
-  }
-
-  if (showSplash) {
-    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
   }
 
   // 1. Unauthenticated -> Go to login screen
