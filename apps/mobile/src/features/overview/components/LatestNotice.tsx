@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Pressable, ScrollView, StyleSheet, Platform } from 'react-native';
 import { Text } from '@repo/ui';
 import { ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { NOTICES } from '../../notices/data';
+import { NoticeService } from '../../../services/NoticeService';
+import { Notice } from '../../notices/types';
 import { getNoticeIcon } from '../../notices/components/NoticeCard';
 import Animated, { FadeIn, FadeInUp, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,12 +14,17 @@ const FILTERS = ['All', 'Maintenance', 'Society', 'Events'];
 export function LatestNotice() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState('All');
+  const [notices, setNotices] = useState<Notice[]>([]);
+
+  useEffect(() => {
+    NoticeService.getNotices().then(setNotices).catch(console.error);
+  }, []);
 
   // Filter notices (show only first 3 matching items on Home for brevity)
   const filteredNotices = (
     activeFilter === 'All' 
-      ? NOTICES 
-      : NOTICES.filter(n => n.category === activeFilter)
+      ? notices 
+      : notices.filter(n => n.category === activeFilter)
   ).slice(0, 3);
 
   return (

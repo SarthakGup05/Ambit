@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Pressable,
@@ -15,7 +15,8 @@ import {
   Share2,
   MoreHorizontal,
 } from 'lucide-react-native';
-import { NOTICES } from '../data';
+import { NoticeService } from '../../../services/NoticeService';
+import { Notice } from '../types';
 import { getNoticeIcon } from './NoticeCard';
 import Animated, {
   FadeIn,
@@ -34,8 +35,23 @@ export function NoticeDetailsScreen() {
   const { id } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
-  const notice = NOTICES.find((n) => n.id === id) || NOTICES[0];
-  const IconComponent = getNoticeIcon(notice.iconName);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    const fetchNotice = async () => {
+      try {
+        const notices = await NoticeService.getNotices();
+        const found = notices.find((n) => n.id === id);
+        setNotice(found || notices[0]);
+      } catch (e) {
+        console.error('Failed to load notice details', e);
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchNotice();
+  }, [id]);
 
   const [acknowledged, setAcknowledged] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,11 +84,13 @@ export function NoticeDetailsScreen() {
     }
   };
 
-  const isMegaphone = notice.iconName === 'megaphone';
-  const iconColor = isMegaphone ? '#D4AF37' : (notice.iconColor || '#2E7D32');
+  const isMegaphone = notice?.iconName === 'megaphone';
+  const iconColor = isMegaphone ? '#D4AF37' : (notice?.iconColor || '#2E7D32');
   const iconSize = isMegaphone ? 18 : 14;
-  const badgeBg = isMegaphone ? 'rgba(212, 175, 55, 0.1)' : (notice.tagBg || '#EAF5EB');
-  const badgeTextColor = isMegaphone ? '#B8860B' : (notice.tagText || notice.iconColor || '#2E7D32');
+  const badgeBg = isMegaphone ? 'rgba(212, 175, 55, 0.1)' : (notice?.tagBg || '#EAF5EB');
+  const badgeTextColor = isMegaphone ? '#B8860B' : (notice?.tagText || notice?.iconColor || '#2E7D32');
+
+  const IconComponent = notice ? getNoticeIcon(notice.iconName) : null;
 
   return (
     <View style={styles.container}>
@@ -92,76 +110,85 @@ export function NoticeDetailsScreen() {
           </View>
         </Animated.View>
 
-        {/* ── Scrollable Content ── */}
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: Math.max(insets.bottom, 20) + (acknowledged ? 100 : 40) },
-          ]}
-          showsVerticalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          onContentSizeChange={(w, h) => {
-            setContentHeight(h);
-            checkIfAutoAcknowledgeNeeded(h, scrollViewHeight);
-          }}
-          onLayout={(e) => {
-            const { height } = e.nativeEvent.layout;
-            setScrollViewHeight(height);
-            checkIfAutoAcknowledgeNeeded(contentHeight, height);
-          }}
-        >
-          {/* Hero Section */}
-          <View style={styles.heroSection}>
-            <Animated.View entering={FadeInUp.duration(400).delay(100)} style={styles.tagsContainer}>
-              <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-                <IconComponent size={iconSize} color={iconColor} />
-                <Text style={[styles.badgeText, { color: badgeTextColor }]}>
-                  {notice.category}
-                </Text>
-              </View>
-              {notice.isUrgent && (
-                <View style={styles.urgentBadge}>
-                  <Text style={styles.urgentBadgeText}>URGENT</Text>
-                </View>
-              )}
-            </Animated.View>
-
-            <Animated.View entering={FadeInUp.duration(450).delay(200)}>
-              <Text style={styles.title}>{notice.title}</Text>
-            </Animated.View>
-
-            <Animated.View entering={FadeInUp.duration(450).delay(300)} style={styles.metaRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{notice.author.charAt(0)}</Text>
-              </View>
-              <View style={styles.metaTextContainer}>
-                <Text style={styles.authorName}>{notice.author}</Text>
-                <View style={styles.dateRow}>
-                  <CalendarDays size={12} color="#6B7280" />
-                  <Text style={styles.dateText}>{notice.date} • {notice.time}</Text>
-                </View>
-              </View>
-            </Animated.View>
+        {fetching ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <CustomSpinner size="large" color="#2E7D32" />
           </View>
+        ) : notice ? (
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: Math.max(insets.bottom, 20) + (acknowledged ? 100 : 40) },
+            ]}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            onContentSizeChange={(w, h) => {
+              setContentHeight(h);
+              checkIfAutoAcknowledgeNeeded(h, scrollViewHeight);
+            }}
+            onLayout={(e) => {
+              const { height } = e.nativeEvent.layout;
+              setScrollViewHeight(height);
+              checkIfAutoAcknowledgeNeeded(contentHeight, height);
+            }}
+          >
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <Animated.View entering={FadeInUp.duration(400).delay(100)} style={styles.tagsContainer}>
+                <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+                  {IconComponent && <IconComponent size={iconSize} color={iconColor} />}
+                  <Text style={[styles.badgeText, { color: badgeTextColor }]}>
+                    {notice.category}
+                  </Text>
+                </View>
+                {notice.isUrgent && (
+                  <View style={styles.urgentBadge}>
+                    <Text style={styles.urgentBadgeText}>URGENT</Text>
+                  </View>
+                )}
+              </Animated.View>
 
-          {/* Divider */}
-          <Animated.View entering={FadeIn.duration(500).delay(350)} style={styles.divider} />
+              <Animated.View entering={FadeInUp.duration(450).delay(200)}>
+                <Text style={styles.title}>{notice.title}</Text>
+              </Animated.View>
 
-          {/* Body Content */}
-          <Animated.View entering={FadeInUp.duration(500).delay(400)}>
-            <Text style={styles.bodyText}>{notice.content}</Text>
-          </Animated.View>
+              <Animated.View entering={FadeInUp.duration(450).delay(300)} style={styles.metaRow}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{notice.author.charAt(0)}</Text>
+                </View>
+                <View style={styles.metaTextContainer}>
+                  <Text style={styles.authorName}>{notice.author}</Text>
+                  <View style={styles.dateRow}>
+                    <CalendarDays size={12} color="#6B7280" />
+                    <Text style={styles.dateText}>{notice.date} • {notice.time}</Text>
+                  </View>
+                </View>
+              </Animated.View>
+            </View>
 
-          {/* Loading indicator when auto-acknowledging */}
-          {loading && (
-            <Animated.View entering={FadeIn} style={styles.loadingContainer}>
-              <CustomSpinner size="small" color="#2E7D32" />
-              <Text style={styles.loadingText}>Acknowledging receipt...</Text>
+            {/* Divider */}
+            <Animated.View entering={FadeIn.duration(500).delay(350)} style={styles.divider} />
+
+            {/* Body Content */}
+            <Animated.View entering={FadeInUp.duration(500).delay(400)}>
+              <Text style={styles.bodyText}>{notice.content}</Text>
             </Animated.View>
-          )}
-        </ScrollView>
+
+            {/* Loading indicator when auto-acknowledging */}
+            {loading && (
+              <Animated.View entering={FadeIn} style={styles.loadingContainer}>
+                <CustomSpinner size="small" color="#2E7D32" />
+                <Text style={styles.loadingText}>Acknowledging receipt...</Text>
+              </Animated.View>
+            )}
+          </ScrollView>
+        ) : (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Text>Notice not found</Text>
+          </View>
+        )}
 
         {/* ── Floating Action Bar (Only shows when acknowledged) ── */}
         {acknowledged && (

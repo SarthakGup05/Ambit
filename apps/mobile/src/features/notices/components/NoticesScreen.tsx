@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Pressable,
@@ -23,7 +23,7 @@ import {
   AlertTriangle,
   CheckCheck,
 } from 'lucide-react-native';
-import { NOTICES } from '../data';
+import { NoticeService } from '../../../services/NoticeService';
 import { Notice } from '../types';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { MegaphoneIcon } from '../../../components/icons/MegaphoneIcon';
@@ -38,9 +38,33 @@ export function NoticesScreen() {
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadNotices = async () => {
+    try {
+      const data = await NoticeService.getNotices();
+      setNotices(data);
+    } catch (e) {
+      console.error('Failed to load notices', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotices();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadNotices();
+  };
 
   const filteredNotices = useMemo(() => {
-    return NOTICES.filter((notice) => {
+    return notices.filter((notice) => {
       const matchesCategory = activeFilter === 'All' || notice.category === activeFilter;
       const matchesSearch =
         searchQuery.trim() === '' ||
@@ -163,6 +187,8 @@ export function NoticesScreen() {
             style={{ flex: 1 }}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             ListEmptyComponent={
               <Animated.View entering={FadeIn.duration(350)} style={styles.emptyCard}>
                 <EmptyStateSVG />
