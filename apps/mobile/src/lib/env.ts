@@ -8,7 +8,7 @@ const getLocalDevUrl = (port: number) => {
 };
 
 export const env = {
-  apiUrl: process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? getLocalDevUrl(3001) : 'http://localhost:3001'),
-  socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || (__DEV__ ? getLocalDevUrl(3001) : 'http://localhost:3001'),
+  apiUrl: process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? getLocalDevUrl(8080) : 'http://localhost:8080'),
+  socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || (__DEV__ ? getLocalDevUrl(8080) : 'http://localhost:8080'),
   isDevelopment: process.env.NODE_ENV === 'development',
 };

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { authClient } from './auth-client';
 import { useAuthStore } from '@/store/auth.store';
 import Constants from 'expo-constants';
 
@@ -19,19 +18,13 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor to attach authentication session cookies and tokens
+// Request interceptor to attach authentication session tokens
 api.interceptors.request.use(
-  async (config) => {
-    // 1. Attach Better-Auth standard session cookies
-    const cookies = authClient.getCookie();
-    if (cookies) {
-      config.headers.cookie = cookies;
-    }
-    
-    // 2. Attach Authorization Bearer token header for token-based auth
+  (config) => {
+    // Attach Authorization Bearer token header for token-based auth
     const token = useAuthStore.getState().token;
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
     
     return config;

@@ -29,6 +29,9 @@ export function useAuth() {
       }
 
       const sessionToken = data.token || (data as any).session?.token || "";
+      if (!sessionToken) {
+        throw new Error("No session token received from the server. Check backend expo() plugin.");
+      }
       const userSession: UserSession = {
         id: data.user.id,
         name: data.user.name,
@@ -82,6 +85,9 @@ export function useAuth() {
       }
 
       const sessionToken = data.token || (data as any).session?.token || "";
+      if (!sessionToken) {
+        throw new Error("No session token received from the server. Check backend expo() plugin.");
+      }
       const userSession: UserSession = {
         id: data.user.id,
         name: data.user.name,
@@ -148,12 +154,12 @@ export function useAuth() {
             societyId: (session.user as any).societyId || null,
             flatNumber: (session.user as any).flatNumber || null,
           };
-          const cookies = authClient.getCookie() || "";
+          const validToken = cachedToken || "";
           
           // Update persistence and state with fresh server data
-          await storage.set("auth_token", cookies);
+          await storage.set("auth_token", validToken);
           await storage.set("auth_user", JSON.stringify(userSession));
-          setAuth(cookies, userSession);
+          setAuth(validToken, userSession);
         } else if (response.error) {
           // If server explicitly responds with auth error, session is invalid/expired
           await storage.remove("auth_token");
