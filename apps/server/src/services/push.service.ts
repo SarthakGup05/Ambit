@@ -67,3 +67,52 @@ export async function sendExpoPush(
     console.error("[Push Notification] Error invoking Expo API:", error);
   }
 }
+
+export interface ExpoPushMessage {
+  to: string;
+  sound?: string;
+  title?: string;
+  body?: string;
+  data?: Record<string, any>;
+}
+
+export async function sendBatchExpoPush(messages: ExpoPushMessage[]) {
+  try {
+    // Filter valid push tokens
+    const validMessages = messages.filter((msg) =>
+      msg.to.startsWith("ExponentPushToken[")
+    );
+
+    if (validMessages.length === 0) return;
+
+    // Expo Push API recommends chunks of up to 100 messages
+    const CHUNK_SIZE = 100;
+    const chunks = [];
+    for (let i = 0; i < validMessages.length; i += CHUNK_SIZE) {
+      chunks.push(validMessages.slice(i, i + CHUNK_SIZE));
+    }
+
+    console.log(`[Push Notification] Sending ${validMessages.length} push notifications in ${chunks.length} batch(es)`);
+
+    for (const chunk of chunks) {
+      const response = await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Accept-encoding": "gzip, deflate",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(chunk),
+      });
+
+      if (!response.ok) {
+        console.error(`[Push Notification] Batch Expo response status: ${response.status}`);
+      } else {
+        const resJson = await response.json();
+        console.log("[Push Notification] Batch Expo response received");
+      }
+    }
+  } catch (error) {
+    console.error("[Push Notification] Error invoking Batch Expo API:", error);
+  }
+}
