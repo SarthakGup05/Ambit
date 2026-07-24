@@ -146,6 +146,7 @@ export const polls = pgTable("polls", {
   question: text("question").notNull(),
   options: jsonb("options").$type<string[]>().notNull(), // array of options
   expiresAt: timestamp("expires_at").notNull(),
+  isFeatured: boolean("is_featured").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

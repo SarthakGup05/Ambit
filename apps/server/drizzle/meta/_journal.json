@@ -29,6 +29,13 @@
       "when": 1784728180500,
       "tag": "0003_stale_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784810899465,
+      "tag": "0004_add_is_featured_to_polls",
+      "breakpoints": true
     }
   ]
 }
