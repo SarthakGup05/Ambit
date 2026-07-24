@@ -1,7 +1,8 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { notices } from "../models/schema.js";
+import { notices, user, notifications } from "../models/schema.js";
+import { sendBatchExpoPush, type ExpoPushMessage } from "../services/push.service.js";
 
 /**
  * 📢 Get Notices
@@ -58,6 +59,47 @@ export async function createNotice(req: Request, res: Response, next: NextFuncti
 
     if (!newNotice) {
       return res.status(500).json({ error: "Failed to create notice" });
+    }
+
+    // Fetch all residents of the society
+    const residents = await db
+      .select({ id: user.id, pushToken: user.pushToken })
+      .from(user)
+      .where(and(eq(user.societyId, req.societyId), eq(user.role, "resident")));
+
+    if (residents.length > 0) {
+      // 1. Create In-App Notifications
+      const notificationRecords = residents.map((resident) => ({
+        societyId: req.societyId!,
+        userId: resident.id,
+        title: `New Notice: ${newNotice.title}`,
+        body: newNotice.description,
+        isRead: false,
+      }));
+
+      try {
+        await db.insert(notifications).values(notificationRecords);
+      } catch (err) {
+        console.error("Failed to insert in-app notifications:", err);
+      }
+
+      // 2. Send Push Notifications
+      const pushMessages: ExpoPushMessage[] = residents
+        .filter((resident) => resident.pushToken)
+        .map((resident) => ({
+          to: resident.pushToken!,
+          sound: "default",
+          title: `New Notice: ${newNotice.title}`,
+          body: newNotice.description,
+          data: { route: "/(resident)/(tabs)/notices", noticeId: newNotice.id },
+        }));
+
+      if (pushMessages.length > 0) {
+        // Execute batch push in background
+        sendBatchExpoPush(pushMessages).catch((err) =>
+          console.error("Failed to send batch push notifications:", err)
+        );
+      }
     }
 
     return res.status(201).json({
