@@ -10,13 +10,15 @@ export interface Poll {
   question: string;
   options: string[];
   expiresAt: string;
+  isFeatured: boolean;
   userVotedOption: string | null;
   results: PollOptionTally[];
   totalVotes: number;
+  description?: string;
 }
 
 export interface EnhancedPoll extends Poll {
-  isFeatured?: boolean;
+  isFeatured: boolean;
   description?: string;
   expiresLabel?: string;
   icon?: string;

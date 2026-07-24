@@ -21,7 +21,7 @@ import {
   SuggestPollBanner,
   SuggestPollModal,
 } from '@/features/polls';
-import { BASELINES, COLORS, RADIUS, FONT } from '@/features/polls/constants';
+import { COLORS, RADIUS, FONT } from '@/features/polls/constants';
 
 function triggerHaptic() {
   try {
@@ -34,56 +34,30 @@ function triggerHaptic() {
 function getEnhancedPoll(poll: Poll): EnhancedPoll {
   const q = poll.question.toLowerCase();
 
-  const baseKey = Object.keys(BASELINES).find((k) => q.includes(k));
-  let results = poll.results;
-  let totalVotes = poll.totalVotes;
+  // Compute a dynamic expiry label from the actual expiresAt date
+  const msLeft = new Date(poll.expiresAt).getTime() - Date.now();
+  const daysLeft = Math.floor(msLeft / 86400000);
+  const hoursLeft = Math.floor((msLeft % 86400000) / 3600000);
+  const expiresLabel = msLeft <= 0
+    ? 'Closed'
+    : daysLeft > 0
+      ? `Ends in ${daysLeft}d ${hoursLeft}h`
+      : `Ends in ${hoursLeft}h`;
 
-  if (baseKey) {
-    const base = BASELINES[baseKey];
-    totalVotes = base.totalVotes + (poll.userVotedOption ? 1 : 0);
-    results = poll.results.map((r) => {
-      const baseCount = base.tallies[r.option] || 0;
-      const userAdded = poll.userVotedOption === r.option ? 1 : 0;
-      return { ...r, votes: baseCount + userAdded };
-    });
-  }
-
-  if (q.includes('play area')) {
-    return {
-      ...poll,
-      isFeatured: true,
-      description: 'Let us know if you support the proposal to upgrade the play area with new equipment and safety flooring.',
-      totalVotes,
-      results,
-      userVotedOption: poll.userVotedOption,
-      expiresLabel: 'Ends in 2d 14h',
-    };
-  }
-
-  if (q.includes('parking charges')) {
-    return {
-      ...poll,
-      icon: 'car',
-      totalVotes,
-      results,
-      expiresLabel: 'Ends in 4d 18h',
-    };
-  }
-
-  if (q.includes('ro plants')) {
-    return {
-      ...poll,
-      icon: 'droplet',
-      totalVotes,
-      results,
-      expiresLabel: 'Ends in 7d 12h',
-    };
-  }
+  // Icon heuristic (visual only, no effect on data)
+  let icon: string | undefined;
+  if (q.includes('parking') || q.includes('car')) icon = 'car';
+  else if (q.includes('water') || q.includes('ro') || q.includes('plant')) icon = 'droplet';
 
   return {
     ...poll,
-    totalVotes,
-    results,
+    isFeatured: poll.isFeatured ?? false,
+    expiresLabel,
+    icon,
+    // Featured polls also get a description if they don't have one
+    description: poll.isFeatured && !poll.description
+      ? poll.question
+      : poll.description,
   };
 }
 
