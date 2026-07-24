@@ -4,6 +4,7 @@ import { Text } from '@repo/ui';
 import { Sparkles, Calendar, ArrowRight, ShieldCheck } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Amenity } from '../api';
 
 interface BookingsHeroCardProps {
@@ -39,12 +40,15 @@ export const BookingsHeroCard: React.FC<BookingsHeroCardProps> = ({
           <Image source={{ uri: imageUri }} style={styles.heroImage} resizeMode="cover" />
           
           {/* Dark Overlay for contrast */}
-          <View style={styles.overlay}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.9)']}
+            style={styles.overlay}
+          >
             {/* Top Pill & Icon */}
             <View style={styles.topRow}>
               <View style={styles.badge}>
-                <Sparkles size={13} color="#F59E0B" />
-                <Text style={styles.badgeText}>FEATURED SPOTLIGHT</Text>
+                <Sparkles size={13} color="#FBBF24" />
+                <Text style={styles.badgeText}>FEATURED</Text>
               </View>
               <View style={styles.perkPill}>
                 <ShieldCheck size={13} color="#10B981" />
@@ -63,12 +67,12 @@ export const BookingsHeroCard: React.FC<BookingsHeroCardProps> = ({
 
               <View style={styles.actionRow}>
                 <View style={styles.ctaButton}>
-                  <Text style={styles.ctaText}>Reserve Featured Space</Text>
+                  <Text style={styles.ctaText}>Reserve Space</Text>
                   <ArrowRight size={16} color="#FFF" />
                 </View>
               </View>
             </View>
-          </View>
+          </LinearGradient>
         </View>
       </Pressable>
     </Animated.View>
@@ -108,9 +112,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.42)', // Dark gradient simulation
-    padding: 20,
+    ...StyleSheet.absoluteFillObject,
+    padding: 24,
     justifyContent: 'space-between',
   },
   topRow: {

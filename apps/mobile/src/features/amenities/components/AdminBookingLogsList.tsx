@@ -177,6 +177,18 @@ export const AdminBookingLogsList: React.FC<AdminBookingLogsListProps> = ({
                             >
                               <Text style={styles.declineBtnText}>Decline</Text>
                             </Pressable>
+                            <Pressable
+                              style={({ pressed }) => [
+                                styles.approveBtn,
+                                pressed && { opacity: 0.9 },
+                              ]}
+                              onPress={() => {
+                                triggerHaptic();
+                                onAccept?.(log.id);
+                              }}
+                            >
+                              <Text style={styles.approveBtnText}>Approve</Text>
+                            </Pressable>
                           </View>
                         </View>
                       )}
@@ -447,16 +459,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   declineBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#FDBA74',
     backgroundColor: 'transparent',
   },
   declineBtnText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#C2410C',
+  },
+  approveBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#059669',
+  },
+  approveBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
