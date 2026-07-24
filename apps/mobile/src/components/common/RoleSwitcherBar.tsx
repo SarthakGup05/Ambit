@@ -12,7 +12,9 @@ export function RoleSwitcherBar() {
   const insets = useSafeAreaInsets();
   const { user, setAuth, token } = useAuthStore();
 
-  if (!__DEV__ || !user) {
+  // Only show in local development. 
+  // It will automatically be hidden in EAS Preview or Production builds because __DEV__ is false.
+  if (!__DEV__ || process.env.NODE_ENV === 'production' || !user) {
     return null;
   }
 
