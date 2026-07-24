@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { auth } from "../auth.js";
+import { fromNodeHeaders } from "better-auth/node";
 
 // Extend Express Request type to include user, session, and societyId
 declare global {
@@ -18,16 +19,8 @@ declare global {
  */
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
-    const headers = new Headers();
-    if (typeof req.headers.authorization === "string") {
-      headers.set("authorization", req.headers.authorization);
-    }
-    if (typeof req.headers.cookie === "string") {
-      headers.set("cookie", req.headers.cookie);
-    }
-
     const session = await auth.api.getSession({
-      headers,
+      headers: fromNodeHeaders(req.headers),
     });
 
     if (!session) {
