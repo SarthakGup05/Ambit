@@ -72,9 +72,11 @@ export default function ResidentProfileTab() {
 
       <Screen className="flex-1 bg-transparent" scrollable={false}>
         <ScrollView
-          contentContainerStyle={uiStyles.scroll}
+          contentContainerStyle={[
+            uiStyles.scroll,
+            { paddingTop: 24, paddingBottom: 160 }
+          ]}
           showsVerticalScrollIndicator={false}
-          style={{ paddingTop: 24, paddingBottom: 140 }}
         >
           {/* Header */}
           <View style={styles.header}>
