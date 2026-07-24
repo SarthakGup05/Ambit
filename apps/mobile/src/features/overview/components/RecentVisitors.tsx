@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Text } from '@repo/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Check } from 'lucide-react-native';
-import { recentVisitors } from '../data/mock';
+import { VisitorService, Visitor } from '../../../services/VisitorService';
 
 export function RecentVisitors() {
+  const [recentVisitors, setRecentVisitors] = useState<Visitor[]>([]);
+
+  useEffect(() => {
+    VisitorService.getFlatVisitors()
+      .then(visitors => setRecentVisitors(visitors.slice(0, 3)))
+      .catch(console.error);
+  }, []);
+
+  if (recentVisitors.length === 0) return null;
+
   return (
     <View style={styles.card}>
       {recentVisitors.map((visitor, index) => {
@@ -36,7 +46,7 @@ export function RecentVisitors() {
               <Text style={styles.visitorName} numberOfLines={1}>
                 {visitor.name}
               </Text>
-              <Text style={styles.visitorDate}>{visitor.date}</Text>
+              <Text style={styles.visitorDate}>{new Date(visitor.createdAt).toLocaleDateString()}</Text>
             </View>
 
             {/* Status badge */}
