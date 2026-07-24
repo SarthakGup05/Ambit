@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Text } from '@repo/ui';
 import { uiStyles } from '@/theme';
+import { FormInput } from '@/components/common';
 import {
   Wrench,
   Zap,
@@ -166,35 +167,24 @@ export function CreateComplaintModal({ onSubmit, onClose, registerSubmit }: Crea
       </View>
 
       {/* Title Input */}
-      <View style={styles.fieldGroup}>
-        <Text style={uiStyles.sectionLabel}>Complaint Title</Text>
-        <View style={uiStyles.searchInner}>
-          <TextInput
-            style={uiStyles.searchInput}
-            placeholder="e.g., Water leakage in master bathroom"
-            placeholderTextColor="#A3A1A8"
-            value={title}
-            onChangeText={setTitle}
-          />
-        </View>
-      </View>
+      <FormInput
+        label="Complaint Title"
+        placeholder="e.g., Water leakage in master bathroom"
+        value={title}
+        onChangeText={setTitle}
+        onClear={() => setTitle('')}
+      />
 
       {/* Description Input */}
-      <View style={styles.fieldGroup}>
-        <Text style={uiStyles.sectionLabel}>Detailed Description</Text>
-        <View style={styles.textAreaContainer}>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Provide specific location, timing, or details to help resolve this quickly..."
-            placeholderTextColor="#A3A1A8"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </View>
-      </View>
+      <FormInput
+        label="Detailed Description"
+        placeholder="Provide specific location, timing, or details to help resolve this quickly..."
+        value={description}
+        onChangeText={setDescription}
+        multiline
+        numberOfLines={4}
+        inputContainerStyle={{ height: 120, alignItems: 'flex-start', paddingTop: 6 }}
+      />
     </ScrollView>
   );
 }

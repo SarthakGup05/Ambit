@@ -39,4 +39,5 @@ export interface CreateComplaintInput {
   category: ComplaintCategory;
   priority: ComplaintPriority;
   flatNumber: string;
+  images?: string[];
 }

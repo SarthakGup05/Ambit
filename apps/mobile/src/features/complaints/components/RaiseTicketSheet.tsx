@@ -33,13 +33,13 @@ const CATEGORIES: {
   label: string;
   Icon: React.ComponentType<{ size?: number; color?: string }>;
 }[] = [
-  { id: 'plumbing', label: 'Plumbing', Icon: Wrench },
-  { id: 'electrical', label: 'Electrical', Icon: Zap },
-  { id: 'elevator', label: 'Elevator', Icon: ArrowUpDown },
-  { id: 'maintenance', label: 'Maintenance', Icon: Hammer },
-  { id: 'security', label: 'Security', Icon: Shield },
-  { id: 'other', label: 'Other', Icon: HelpCircle },
-];
+    { id: 'plumbing', label: 'Plumbing', Icon: Wrench },
+    { id: 'electrical', label: 'Electrical', Icon: Zap },
+    { id: 'elevator', label: 'Elevator', Icon: ArrowUpDown },
+    { id: 'maintenance', label: 'Maintenance', Icon: Hammer },
+    { id: 'security', label: 'Security', Icon: Shield },
+    { id: 'other', label: 'Other', Icon: HelpCircle },
+  ];
 
 const PRIORITIES: {
   id: ComplaintPriority;
@@ -47,14 +47,14 @@ const PRIORITIES: {
   color: string;
   bg: string;
 }[] = [
-  { id: 'low',    label: 'Low',    color: '#2E7D32', bg: 'rgba(46, 125, 50, 0.1)' },
-  { id: 'medium', label: 'Medium', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
-  { id: 'high',   label: 'High',   color: '#D97706', bg: 'rgba(217, 119, 6, 0.1)'  },
-  { id: 'urgent', label: 'Urgent', color: '#DC2626', bg: 'rgba(220, 38, 38, 0.12)' },
-];
+    { id: 'low', label: 'Low', color: '#2E7D32', bg: 'rgba(46, 125, 50, 0.1)' },
+    { id: 'medium', label: 'Medium', color: '#2563EB', bg: 'rgba(37, 99, 235, 0.1)' },
+    { id: 'high', label: 'High', color: '#D97706', bg: 'rgba(217, 119, 6, 0.1)' },
+    { id: 'urgent', label: 'Urgent', color: '#DC2626', bg: 'rgba(220, 38, 38, 0.12)' },
+  ];
 
 function haptic() {
-  try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+  try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch { }
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────

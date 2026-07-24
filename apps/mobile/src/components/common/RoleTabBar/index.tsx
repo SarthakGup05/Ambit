@@ -152,7 +152,7 @@ export function RoleTabBar({ state, navigation, tabs }: Props) {
               tab={tab}
               isFocused={isFocused}
               onPress={onPress}
-              showBadge={tab.name === 'notifications'}
+              showBadge={tab.name === 'index'}
               badgeCount={unreadCount}
             />
           );

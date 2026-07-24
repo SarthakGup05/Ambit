@@ -9,7 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Screen, Text, ListSkeleton } from '@repo/ui';
-import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState } from '@/components/common';
+import { ScreenBackground, AppSectionCard, AppListItem, AppEmptyState, FormInput } from '@/components/common';
 import { uiStyles, type } from '@/theme';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, UserPlus, Copy, Key, User, Truck, Wrench } from 'lucide-react-native';
@@ -134,6 +134,7 @@ export default function PreApproveGuestScreen() {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 80 }}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E4D2B" />
             }
@@ -144,7 +145,6 @@ export default function PreApproveGuestScreen() {
                 <View style={styles.formContainer}>
                   {/* Guest Type Selector */}
                   <View style={styles.formGroup}>
-                    <Text style={uiStyles.sectionLabel}>Visitor Type</Text>
                     <View style={styles.typeRow}>
                       {GUEST_TYPES.map((t) => {
                         const isSelected = guestType === t.id;
@@ -166,18 +166,14 @@ export default function PreApproveGuestScreen() {
                   </View>
 
                   {/* Name Input */}
-                  <View style={styles.formGroup}>
-                    <Text style={uiStyles.sectionLabel}>Guest Name</Text>
-                    <View style={uiStyles.searchInner}>
-                      <TextInput
-                        style={uiStyles.searchInput}
-                        placeholder="Enter full name of visitor"
-                        placeholderTextColor="#A3A1A8"
-                        value={guestName}
-                        onChangeText={setGuestName}
-                      />
-                    </View>
-                  </View>
+                  <FormInput
+                    label="Guest Name"
+                    placeholder="Enter full name of visitor"
+                    value={guestName}
+                    onChangeText={setGuestName}
+                    onClear={() => setGuestName('')}
+                    leftIcon={<User size={18} color="#8E8D94" />}
+                  />
 
                   <Pressable
                     onPress={handleCreatePass}
@@ -247,22 +243,31 @@ export default function PreApproveGuestScreen() {
 }
 
 const styles = StyleSheet.create({
-  formContainer: { paddingVertical: 4, gap: 16 },
-  formGroup: { gap: 8 },
-  typeRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
+  formContainer: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, gap: 20 },
+  formGroup: { gap: 10 },
+  typeRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   typePill: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.035)',
-    borderWidth: 1,
-    borderColor: 'transparent',
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 0, 0, 0.04)',
   },
-  typePillActive: { backgroundColor: '#1E4D2B', borderColor: '#1E4D2B' },
-  typeText: { fontSize: 12, fontFamily: 'InterMedium', color: '#4A5568' },
+  typePillActive: {
+    backgroundColor: '#1E4D2B',
+    borderColor: '#FFFFFF',
+    borderWidth: 1.5,
+    shadowColor: '#1E4D2B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  typeText: { fontSize: 13, fontFamily: 'InterMedium', color: '#4A5568' },
   typeTextActive: { color: '#FFFFFF', fontFamily: 'InterBold' },
   submitBtn: {
     backgroundColor: '#1E4D2B',

@@ -18,3 +18,5 @@ export { StatusModal } from './StatusModal';
 
 export * from './CustomSpinner';
 export { SplashScreen } from './SplashScreen';
+export { FormInput } from './FormInput';
+export type { FormInputProps } from './FormInput';
