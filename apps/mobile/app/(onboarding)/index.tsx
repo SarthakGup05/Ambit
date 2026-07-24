@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../../src/store/auth.store";
 import { api } from "../../src/lib/axios";
-import { Home, Shield, ClipboardCopy, ArrowLeft, CheckCircle } from "lucide-react-native";
+import { Home, Shield, ClipboardCopy, ArrowLeft, CheckCircle, ArrowRight } from "lucide-react-native";
 import Animated, { FadeInLeft, FadeInRight, ZoomIn } from "react-native-reanimated";
 
 type Step = "select-role" | "resident-form" | "admin-form" | "admin-success";
@@ -153,17 +153,26 @@ export default function OnboardingScreen() {
 
                 {/* Option 2: Admin */}
                 <Pressable 
-                  style={styles.roleCard}
-                  onPress={() => setStep("admin-form")}
+                  style={[styles.roleCard, styles.roleCardAdmin]}
+                  onPress={() => router.push("/(onboarding)/admin-setup")}
                 >
-                  <View style={styles.iconContainer}>
-                    <Shield size={28} color="#2E7D32" />
+                  <LinearGradient
+                    colors={["#0F172A", "#1E293B"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                  <View style={[styles.iconContainer, styles.iconContainerAdmin]}>
+                    <Shield size={28} color="#FFFFFF" />
                   </View>
                   <View style={styles.cardContent}>
-                    <Text variant="h3" className="font-bold text-[#11111E]">Create a Society (Admin)</Text>
-                    <Text style={styles.cardDescription}>
+                    <Text variant="h3" style={styles.adminCardTitle}>Create a Society</Text>
+                    <Text style={styles.adminCardDescription}>
                       Register a new society, configure towers, manage members, and set up guard portals.
                     </Text>
+                    <View style={styles.adminCardTag}>
+                      <Text style={styles.adminCardTagText}>Admin Setup Wizard  →</Text>
+                    </View>
                   </View>
                 </Pressable>
               </Animated.View>
@@ -339,6 +348,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 2,
+    overflow: "hidden",
+  },
+  roleCardAdmin: {
+    borderColor: "rgba(15, 23, 42, 0.15)",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
   iconContainer: {
     width: 56,
@@ -350,6 +367,37 @@ const styles = StyleSheet.create({
     marginRight: 16,
     borderWidth: 1,
     borderColor: "rgba(46, 125, 50, 0.15)",
+  },
+  iconContainerAdmin: {
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  adminCardTitle: {
+    fontSize: 16,
+    fontFamily: "ManropeBold",
+    color: "#FFFFFF",
+    letterSpacing: -0.2,
+  },
+  adminCardDescription: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontFamily: "InterMedium",
+    marginTop: 4,
+    lineHeight: 16,
+  },
+  adminCardTag: {
+    marginTop: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: "flex-start",
+  },
+  adminCardTagText: {
+    fontSize: 11,
+    fontFamily: "InterBold",
+    color: "rgba(255, 255, 255, 0.9)",
+    letterSpacing: 0.3,
   },
   cardContent: {
     flex: 1,
